@@ -9,28 +9,32 @@ import java.util.Scanner;
  * @author Fanti Samisti
  */
 public class Client {
-    public static final int CLIENT_SERVER_PORT = 9001;
+    private static int client_port = 9001;
 
     public static void main(String[] args) {
-
         String shared_file_path = "./";
         String server_address = "127.0.0.1";
         String server_port = "8000";
         String[] commands = new String[] {"help", "share", "file_req", "download_req", "upload_req", "exit"};
 
-        if(args.length>3){
-          throw new IllegalArgumentException("The arguments format should be:" +
-                  " \"Client [shared_file_path] [server_address] [server_port]\"");
-        } else if(args.length==3){
+        if(args.length == 1) {
+            // Only client port is provided, listens on every IP, rest is default
+            client_port = Integer.parseInt(args[0]);
+        }
+        else if(args.length > 4){
+            throw new IllegalArgumentException("The arguments format should be:" +
+                    " \"Client [shared_file_path] [server_address] [server_port]\"");
+        } else if(args.length == 4){
             shared_file_path = args[0];
             server_address = args[1];
             server_port = args[2];
+            client_port = Integer.parseInt(args[3]);
         }
 
-        ClientServer cl = new ClientServer(CLIENT_SERVER_PORT);
+        ClientServer cl = new ClientServer(client_port);
 
-        InetAddress serverAddress=null;
-        int serverPort=-1;
+        InetAddress serverAddress = null;
+        int serverPort = -1;
 
         try {
             serverAddress = InetAddress.getByName(server_address);
@@ -39,18 +43,17 @@ public class Client {
             e.printStackTrace();
         }
 
-        String fileNames [] = {"hello_./", "star wars_./", "jumbo_./"};
-        String file = "hello";
+        String fileNames [] = {"file1", "file2", "file3"};
+        String file = "file1";
         String path = "./data";
-        InetAddress addDestination = null;
-        int dest_port = CLIENT_SERVER_PORT+1;
+
+        InetAddress clientIP = null;
         try {
-            addDestination = InetAddress.getByName("127.0.0.1");
+            clientIP = InetAddress.getByName("127.0.0.1");
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
-        System.out.println("HOST : "  + CLIENT_SERVER_PORT);
-        System.out.println("DESTINATION : "  + addDestination+ " " + dest_port);
+        System.out.println("Running on: "  + clientIP+ ":" + client_port);
 
         String userInput;
         do{
@@ -58,13 +61,6 @@ public class Client {
             userInput = sc.next();
 
             switch(userInput){
-                case "exit":
-                    unshare(serverAddress, serverPort);
-                    break;
-                case "help":
-                    System.out.print("Available commands:");
-                    System.out.println(Arrays.toString(commands));
-                    break;
                 case "share":
                     share(fileNames, serverAddress, serverPort);
                     break;
@@ -75,7 +71,14 @@ public class Client {
                     downloadReq(file, path, serverAddress, serverPort);
                     break;
                 case "upload_req":  //Only for debugging
-                    uploadReq("myFiles.txt",path, addDestination, dest_port);
+                    uploadReq("myFiles.txt",path, clientIP, client_port);
+                    break;
+                case "help":
+                    System.out.print("Available commands:");
+                    System.out.println(Arrays.toString(commands));
+                    break;
+                case "exit":
+                    unshare(serverAddress, serverPort);
                     break;
                 default:
                     System.err.println("unknown command, please retry");
@@ -84,30 +87,29 @@ public class Client {
         }while(!Objects.equals(userInput, "exit"));
     }
 
-
     private static void share(String [] fileNames, InetAddress serverAdd, int serverPort){
         BroadcasterMediator bm = new BroadcasterMediator(serverAdd, serverPort);
-        bm.share(fileNames);
+        bm.share(fileNames, client_port);
 
     }
 
     private static void fileReq(String fileName, InetAddress serverAdd, int serverPort){
         BroadcasterMediator bm = new BroadcasterMediator(serverAdd, serverPort);
-        bm.file_req(fileName);
+        bm.file_req(fileName, client_port);
     }
 
     private static void unshare(InetAddress serverAdd, int serverPort){
         BroadcasterMediator bm = new BroadcasterMediator(serverAdd, serverPort);
-        bm.disconnect();
+        bm.disconnect(client_port);
     }
 
     private static void downloadReq(String fileName, String path, InetAddress serverAdd, int serverPort){
         BroadcasterMediator bm = new BroadcasterMediator(serverAdd, serverPort);
-        bm.download_req(fileName,path);
+        bm.download_req(fileName,path,client_port);
     }
 
     private static void uploadReq(String fileName, String path, InetAddress addDestination, int portDestination){
         BroadcasterMediator bm = new BroadcasterMediator(addDestination, portDestination);
-        bm.upload_file(fileName,path);
+        bm.upload_file(fileName,path,client_port);
     }
 }

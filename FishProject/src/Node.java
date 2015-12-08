@@ -17,7 +17,6 @@ public class Node {
         files = new HashMap<>();
     }
 
-
     /**
      *
      * @return ip_add of the Node

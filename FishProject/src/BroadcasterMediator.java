@@ -14,13 +14,13 @@ public class BroadcasterMediator {
         this.to_port = to_port;
     }
 
-    public void disconnect() {
-         b = new Broadcaster(to_add, to_port, "unshare,");
+    public void disconnect(int clientPort) {
+         b = new Broadcaster(to_add, to_port, "unshare," + clientPort);
         (new Thread(b)).start();
     }
 
-    public void share(String [] fileNames){
-        String msg = "shared_files,";
+    public void share(String [] fileNames, int clientPort){
+        String msg = "shared_files," + clientPort + ",";
         for(String fileName: fileNames){
             msg = msg.concat(fileName+";");
         }
@@ -29,8 +29,8 @@ public class BroadcasterMediator {
         (new Thread(b)).start();
     }
 
-    public void file_req(String fileName){
-        String msg = "file_req,";
+    public void file_req(String fileName, int clientPort){
+        String msg = "file_req," + clientPort + ",";
         msg = msg.concat(fileName+";");
 
         b = new Broadcaster(to_add, to_port, msg);
@@ -47,13 +47,13 @@ public class BroadcasterMediator {
         (new Thread(b)).start();
     }
 
-    public void download_req(String fileName, String path){
-        String msg = "download_req," + fileName + "_" + path;
+    public void download_req(String fileName, String path, int clientPort){
+        String msg = "download_req," + clientPort + "," + fileName + "_" + path;
         b = new Broadcaster(to_add, to_port, msg);
         (new Thread(b)).start();
     }
 
-    public void upload_file(String fileName, String path){//TODO
+    public void upload_file(String fileName, String path, int clientPort){//TODO
         FileBroadcaster fB = new FileBroadcaster(path, fileName, to_add, to_port);
         (new Thread(fB)).start();
     }
