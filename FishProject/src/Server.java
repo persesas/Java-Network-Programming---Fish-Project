@@ -65,6 +65,7 @@ public class Server {
             String from = this.recv_packet.getAddress().getHostAddress() + ", " + this.recv_packet.getPort();
             InetAddress from_inet = this.recv_packet.getAddress();
             String data = new String(this.recv_packet.getData(), 0, this.recv_packet.getLength());
+
             String [] table = data.split(",");
             String command = table[0];
             System.out.println("SERVER : " + data);
@@ -81,10 +82,11 @@ public class Server {
                     nodes.get(idxNode).addFile(name, dest);
                 }
 
-            } else if(Objects.equals(command, "unshare")){  // pck(unshare,)
+            }
+            else if(Objects.equals(command, "unshare")){  // pck(unshare,)
                 nodes.remove(findIdxNode(from));
-
-            } else if(Objects.equals(command, "file_req")){ // pck(share, fileName1;fileName2;...)
+            }
+            else if(Objects.equals(command, "file_req")){ // pck(share, fileName1;fileName2;...)
                 String fileNames[] = table[1].split(";");
                 BroadcasterMediator bm = new BroadcasterMediator(from_inet, Client.CLIENT_SERVER_PORT);
                 boolean fileFound = false;

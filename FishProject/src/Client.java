@@ -1,5 +1,6 @@
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Scanner;
 
@@ -15,6 +16,7 @@ public class Client {
         String shared_file_path = "./";
         String server_address = "127.0.0.1";
         String server_port = "8000";
+        String[] commands = new String[] {"help", "share", "file_req", "download_req", "upload_req", "exit"};
 
         if(args.length>3){
           throw new IllegalArgumentException("The arguments format should be:" +
@@ -24,6 +26,7 @@ public class Client {
             server_address = args[1];
             server_port = args[2];
         }
+
         ClientServer cl = new ClientServer(CLIENT_SERVER_PORT);
 
         InetAddress serverAddress=null;
@@ -58,6 +61,10 @@ public class Client {
                 case "exit":
                     unshare(serverAddress, serverPort);
                     break;
+                case "help":
+                    System.out.print("Available commands:");
+                    System.out.println(Arrays.toString(commands));
+                    break;
                 case "share":
                     share(fileNames, serverAddress, serverPort);
                     break;
@@ -71,7 +78,7 @@ public class Client {
                     uploadReq("myFiles.txt",path, addDestination, dest_port);
                     break;
                 default:
-                    System.err.println("unknown command, retry again:");
+                    System.err.println("unknown command, please retry");
             }
 
         }while(!Objects.equals(userInput, "exit"));

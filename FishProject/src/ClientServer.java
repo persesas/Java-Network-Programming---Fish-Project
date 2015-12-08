@@ -27,13 +27,12 @@ public class ClientServer {
                 }
                 fos.close();
                 socket.close();
-
             } catch (IOException e) {
                 e.printStackTrace();
             }
         };
+
         Thread serverThread = new Thread(serverTask);
         serverThread.start();
     }
-
 }

@@ -38,8 +38,6 @@ public class Broadcaster implements Runnable {
                         msg.getBytes().length, addr, toPort);
             System.out.println("msg sent " + " at " + addr + " " + toPort + " : " + msg);
             socket.send(packet);
-
-
         } catch (UnknownHostException e) {
             System.out.println("Unknown host");
         } catch (IOException e) {

@@ -17,7 +17,7 @@ public class FileBroadcaster implements Runnable {
     @Override
     public void run() {
         try {
-            File myFile = new File(path+"/"+fileName);
+            File myFile = new File(path + "/" + fileName);
             System.out.println(toIp +  " " + toPort);
             Socket socket = new Socket(InetAddress.getByName(toIp), toPort);
 
