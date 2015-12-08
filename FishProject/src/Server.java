@@ -12,12 +12,12 @@ import java.util.concurrent.Executors;
  * @author Fanti Samisti
  */
 public class Server {
-
     volatile static ArrayList<Node> nodes = new ArrayList<>();
 
 
     public static void main(String[] args) {
-        new Server(Integer.parseInt(args[0]));
+//        int port = Integer.parseInt(args[0]);
+        new Server(8000);
     }
 
     public Server(int port) {
@@ -41,7 +41,9 @@ public class Server {
     }
 
     public static synchronized void printNodes(){
+        System.out.println("v-------- nodes -----v");
         nodes.forEach(System.out::println);
+        System.out.println("^--------------------^");
     }
 
     private class ServerTask implements Runnable {
@@ -53,7 +55,7 @@ public class Server {
 
         private int findIdxNode(String from){
             for (int i = 0; i < nodes.size(); i++) {
-                if(from.equals(nodes.get(i).getIp_add()+","+nodes.get(i).getPort())) return i;
+                if(from.contains(nodes.get(i).getIp_add().getHostAddress())) return i;
             }
             return -1;
         }
@@ -62,42 +64,43 @@ public class Server {
         public void run() {
             String from = this.recv_packet.getAddress().getHostAddress() + ", " + this.recv_packet.getPort();
             InetAddress from_inet = this.recv_packet.getAddress();
-            int from_port = this.recv_packet.getPort();
             String data = new String(this.recv_packet.getData(), 0, this.recv_packet.getLength());
             String [] table = data.split(",");
             String command = table[0];
-            Server.printNodes();
+            System.out.println("SERVER : " + data);
             if(Objects.equals(command, "shared_files")){ // pck(shared_files, file1_dest1;fil2_dest2:file3_dest3;...
-                String shareFiles[] = table[1].split(";");
+                String sharedFiles[] = table[1].split(";");
                 int idxNode = findIdxNode(from);
                 if(idxNode<0){ // New node
-                    nodes.add(new Node(this.recv_packet.getAddress(), this.recv_packet.getPort()));
+                    nodes.add(new Node(this.recv_packet.getAddress(), Client.CLIENT_SERVER_PORT));
                     idxNode = nodes.size()-1;
                 }
-                System.out.println("received msg");
-                for (String shareFile : shareFiles) {
-                    String name = shareFile.split("_")[0];
-                    String dest = shareFile.split("_")[1];
+                for (int i = 0; i < sharedFiles.length; i++) {
+                    String name = sharedFiles[i].split("_")[0];
+                    String dest = sharedFiles[i].split("_")[1];
                     nodes.get(idxNode).addFile(name, dest);
                 }
 
             } else if(Objects.equals(command, "unshare")){  // pck(unshare,)
                 nodes.remove(findIdxNode(from));
 
-            } else if(Objects.equals(command, "file_req")){ // pck(file_req, fileName1;fileName2;...)
+            } else if(Objects.equals(command, "file_req")){ // pck(share, fileName1;fileName2;...)
                 String fileNames[] = table[1].split(";");
-                BroadcasterMediator bm = new BroadcasterMediator(from_inet, from_port);
+                BroadcasterMediator bm = new BroadcasterMediator(from_inet, Client.CLIENT_SERVER_PORT);
+                boolean fileFound = false;
                 for (int f = 0; f < fileNames.length; f++) {
                     for (int j = 0; j < nodes.size(); j++) {
-                        if(nodes.get(j).hasFile(fileNames[f])) {
-                            bm.file_req_resp(true, fileNames[f], nodes.get(j).getIp_add(), nodes.get(j).getPort());
-                        } else{
-                            bm.file_req_resp(false, fileNames[f], null, -1);
-                        }
+                        System.out.println(nodes.get(j).hasFile(fileNames[f]));
+                        fileFound = nodes.get(j).hasFile(fileNames[f]);
+                        if (fileFound)
+                            bm.file_req_resp(true, fileNames[f], nodes.get(j).getPath(fileNames[f]) ,nodes.get(j).getIp_add(), nodes.get(j).getPort()); //TODO return all nodes having the files
                     }
+                    if(!fileFound) bm.file_req_resp(false, fileNames[f], null,  null, -1); //TODO not very nicely coded
                 }
-
             }
+
+            //print result of nodes
+            Server.printNodes();
         }
     }
 }

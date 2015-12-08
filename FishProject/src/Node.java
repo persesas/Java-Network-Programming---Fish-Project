@@ -54,11 +54,20 @@ public class Node {
         files.remove(fileName);
     }
 
+    public String getPath(String fileName){
+        return files.get(fileName);
+    }
+
     /**
      * Returns if a file is shared or not.
      * @param fileName - file name to be searched for
      */
     public boolean hasFile(String fileName){
         return files.containsKey(fileName);
+    }
+
+    @Override
+    public String toString(){
+        return "ip: " + ip_add.getHostAddress() + " port:" + port + " size shared:" + files.size();
     }
 }

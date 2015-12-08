@@ -1,6 +1,8 @@
-import java.io.IOException;
+import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -12,17 +14,20 @@ import java.util.concurrent.Executors;
 public class ClientServer {
 
     public ClientServer(int port) {
-        final ExecutorService clientProcessingPool = Executors.newFixedThreadPool(10);
-
         Runnable serverTask = () -> {
             try {
-                DatagramSocket serverSocket = new DatagramSocket(port);
-                byte[] recv_data = new byte[1024];
-                while (true) {
-                    DatagramPacket recv_packet = new DatagramPacket(recv_data, recv_data.length);
-                    serverSocket.receive(recv_packet);
-                    clientProcessingPool.submit(new ClientTask(recv_packet));
+                ServerSocket serverSocket = new ServerSocket(port);
+                Socket socket = serverSocket.accept();
+                FileOutputStream fos = new FileOutputStream("./test");
+                byte[] buffer = new byte[1024];
+                int count;
+                InputStream in = socket.getInputStream();
+                while((count=in.read(buffer)) >0){
+                    fos.write(buffer, 0, count);
                 }
+                fos.close();
+                socket.close();
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -31,22 +36,4 @@ public class ClientServer {
         serverThread.start();
     }
 
-    private class ClientTask implements Runnable {
-        private final DatagramPacket recv_packet;
-
-        private ClientTask(DatagramPacket packet) {
-            this.recv_packet = packet;
-        }
-
-        @Override
-        public void run() {
-            String from = this.recv_packet.getAddress().getHostAddress() + ", " + this.recv_packet.getPort();
-            String data = new String(this.recv_packet.getData(), 0, this.recv_packet.getLength());
-            String [] table = data.split(",");
-            String command = table[0];
-            if (Objects.equals(command, "...")) {
-                //TODO
-            }
-        }
-    }
 }

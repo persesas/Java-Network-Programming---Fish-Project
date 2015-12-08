@@ -68,7 +68,7 @@ public class DBMediator {
         }
         return instance;
     }
-
+    /*
     public HashMap<String, Item> getAllItems() {
         HashMap<String, Item> items = new HashMap<>();
         try {
@@ -215,4 +215,5 @@ public class DBMediator {
         else
             return false;
     }
+    */
 }
