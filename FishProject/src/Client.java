@@ -43,7 +43,7 @@ public class Client {
             e.printStackTrace();
         }
 
-        String fileNames [] = {"file1", "file2", "file3"};
+        String fileNames [] = {"file1_/", "file2_/", "file3_/"};
         String file = "file1";
         String path = "./data";
 
@@ -57,6 +57,7 @@ public class Client {
 
         String userInput;
         do{
+
             Scanner sc = new Scanner(System.in);
             userInput = sc.next();
 
@@ -65,13 +66,16 @@ public class Client {
                     share(fileNames, serverAddress, serverPort);
                     break;
                 case "file_req":
-                    fileReq(file, serverAddress, serverPort);
+                    if(sc.hasNext())
+                        fileReq(sc.next(), serverAddress, serverPort);
+                    else
+                        System.out.println("WARNING: file_req needs file(s) as arguments");
                     break;
                 case "download_req":
                     downloadReq(file, path, serverAddress, serverPort);
                     break;
                 case "upload_req":  //Only for debugging
-                    uploadReq("myFiles.txt",path, clientIP, client_port);
+                    uploadReq("myFiles.txt", path, clientIP, client_port);
                     break;
                 case "help":
                     System.out.print("Available commands:");
@@ -90,7 +94,6 @@ public class Client {
     private static void share(String [] fileNames, InetAddress serverAdd, int serverPort){
         BroadcasterMediator bm = new BroadcasterMediator(serverAdd, serverPort);
         bm.share(fileNames, client_port);
-
     }
 
     private static void fileReq(String fileName, InetAddress serverAdd, int serverPort){

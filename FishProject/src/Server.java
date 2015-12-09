@@ -1,8 +1,10 @@
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -36,6 +38,7 @@ public class Server {
                 e.printStackTrace();
             }
         };
+
         Thread serverThread = new Thread(serverTask);
         serverThread.start();
     }
@@ -71,33 +74,34 @@ public class Server {
             int clientPort = Integer.parseInt(table[1]);
             String fromIP_Port = this.recv_packet.getAddress().getHostAddress() + " " + clientPort;
 
-            System.out.println("SERVER : " + data);
-
             if(Objects.equals(command, "shared_files")){ // pck(shared_files, CLIENT_PORT, file1_dest1;fil2_dest2:file3_dest3;...
                 String sharedFiles[] = table[2].split(";");
+                System.out.println("Client connected from " + fromIP_Port + ", shared files: " + Arrays.toString(sharedFiles));
+
                 int idxNode = findIdxNode(fromIP_Port);
                 if(idxNode<0){ // New node
                     nodes.add(new Node(from_inet, clientPort));
                     idxNode = nodes.size()-1;
                 }
+
                 for (int i = 0; i < sharedFiles.length; i++) {
                     String name = sharedFiles[i].split("_")[0];
                     String dest = sharedFiles[i].split("_")[1];
                     nodes.get(idxNode).addFile(name, dest);
                 }
-                // print result of nodes
-                Server.printNodes();
             }
             else if(Objects.equals(command, "unshare")){  // pck(unshare, CLIENT_PORT)
+                System.out.println("Client unshared files " + fromIP_Port);
                 nodes.remove(findIdxNode(fromIP_Port));
             }
             else if(Objects.equals(command, "file_req")){ // pck(file_req, CLIENT_PORT, fileName1;fileName2;...)
                 String fileNames[] = table[2].split(";");
+                System.out.println("Client " + fromIP_Port + " requested " + Arrays.toString(fileNames));
+
                 BroadcasterMediator bm = new BroadcasterMediator(from_inet, clientPort);
                 boolean fileFound = false;
                 for (int f = 0; f < fileNames.length; f++) {
                     for (int j = 0; j < nodes.size(); j++) {
-                        System.out.println(nodes.get(j).hasFile(fileNames[f]));
                         fileFound = nodes.get(j).hasFile(fileNames[f]);
                         if (fileFound) {
                             Node n = nodes.get(j);
