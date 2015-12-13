@@ -5,6 +5,7 @@ import java.util.Objects;
 import java.util.Scanner;
 
 /**
+ * Represents the Client
  * @author Perséas Charoud-Got
  * @author Fanti Samisti
  */
@@ -15,7 +16,7 @@ public class Client {
         String shared_file_path = "./";
         String server_address = "127.0.0.1";
         String server_port = "8000";
-        String[] commands = new String[] {"help", "share", "file_req", "download_req", "upload_req", "exit"};
+        String[] commands = new String[] {"help", "share", "fileReq", "downloadReq", "upload_req", "exit"};
 
         if(args.length == 1) {
             // Only client port is provided, listens on every IP, rest is default
@@ -43,7 +44,7 @@ public class Client {
             e.printStackTrace();
         }
 
-        String fileNames [] = {"file1_/", "file2_/", "file3_/"};
+        String fileNames [] = {"myFiles.txt_data/", "file2_/", "file3_/"};
         String file = "file1";
         String path = "./data";
         int otherClientPort = 9002;
@@ -54,7 +55,7 @@ public class Client {
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
-        System.out.println("Running on: "  + clientIP+ ":" + client_port);
+        System.out.println("Running on: "  + clientIP + ":" + client_port);
 
         String userInput;
         do{
@@ -70,7 +71,7 @@ public class Client {
                     if(sc.hasNext())
                         fileReq(sc.next(), serverAddress, serverPort);
                     else
-                        System.out.println("WARNING: file_req needs file(s) as arguments");
+                        System.out.println("WARNING: fileReq needs file(s) as arguments");
                     break;
                 case "download_req":
                     downloadReq(file, path, serverAddress, serverPort);
@@ -99,7 +100,7 @@ public class Client {
 
     private static void fileReq(String fileName, InetAddress serverAdd, int serverPort){
         BroadcasterMediator bm = new BroadcasterMediator(serverAdd, serverPort);
-        bm.file_req(fileName, client_port);
+        bm.fileReq(fileName, client_port);
     }
 
     private static void unshare(InetAddress serverAdd, int serverPort){
@@ -109,11 +110,11 @@ public class Client {
 
     private static void downloadReq(String fileName, String path, InetAddress serverAdd, int serverPort){
         BroadcasterMediator bm = new BroadcasterMediator(serverAdd, serverPort);
-        bm.download_req(fileName,path,client_port);
+        bm.downloadReq(fileName,path,client_port);
     }
 
     private static void uploadReq(String fileName, String path, InetAddress addDestination, int portDestination){
         BroadcasterMediator bm = new BroadcasterMediator(addDestination, portDestination);
-        bm.upload_file(fileName,path,client_port);
+        bm.uploadFile(fileName,path);
     }
 }

@@ -9,17 +9,20 @@ import java.util.Arrays;
 import java.util.Objects;
 
 /**
+ * Represents the Server
  * @author Perséas Charoud-Got
  * @author Fanti Samisti
  */
 public class Server {
-    volatile static ArrayList<Node> nodes = new ArrayList<>();
+    private volatile static ArrayList<Node> nodes = new ArrayList<>();
 
     public static void main(String[] args) {
         // int port = Integer.parseInt(args[0]);
         new Server(8000);
     }
 
+
+    //Given a String from, returns the position in the ArrayList nodes where the from is found and -1 if not found
     private int findIdxNode(String from){
         for (int i = 0; i < nodes.size(); i++) {
             if(from.contains(nodes.get(i).getIp_add().getHostAddress() + " " + nodes.get(i).getPort()))
@@ -28,6 +31,10 @@ public class Server {
         return -1;
     }
 
+    /**
+     * Creates a server listening to a given port
+     * @param port - port listening to
+     */
     public Server(int port) {
         System.out.println("Server running and waiting for connections...");
         Runnable serverTask = () -> {
@@ -59,9 +66,9 @@ public class Server {
                                 idxNode = nodes.size()-1;
                             }
 
-                            for (int i = 0; i < sharedFiles.length; i++) {
-                                String name = sharedFiles[i].split("_")[0];
-                                String dest = sharedFiles[i].split("_")[1];
+                            for (String sharedFile : sharedFiles) {
+                                String name = sharedFile.split("_")[0];
+                                String dest = sharedFile.split("_")[1];
                                 nodes.get(idxNode).addFile(name, dest);
                             }
                         }
@@ -69,22 +76,22 @@ public class Server {
                             System.out.println("Client unshared files " + fromIP_Port);
                             nodes.remove(findIdxNode(fromIP_Port));
                         }
-                        else if(Objects.equals(command, "file_req")){ // pck(file_req, CLIENT_PORT, fileName1;fileName2;...)
+                        else if(Objects.equals(command, "file_req")){ // pck(fileReq, CLIENT_PORT, fileName1;fileName2;...)
                             String fileNames[] = table[2].split(";");
                             System.out.println("Client " + fromIP_Port + " requested " + Arrays.toString(fileNames));
 
                             BroadcasterMediator bm = new BroadcasterMediator(from_inet, clientPort);
                             boolean fileFound = false;
-                            for (int f = 0; f < fileNames.length; f++) {
-                                for (int j = 0; j < nodes.size(); j++) {
-                                    fileFound = nodes.get(j).hasFile(fileNames[f]);
+                            for (String fileName : fileNames) {
+                                for (Node node : nodes) {
+                                    fileFound = node.hasFile(fileName);
                                     if (fileFound) {
-                                        Node n = nodes.get(j);
-                                        bm.file_req_resp(true, fileNames[f], n.getPath(fileNames[f]), n.getIp_add(), n.getPort());
+                                        bm.file_req_resp(true, fileName, node.getPath(fileName), node.getIp_add(), node.getPort());
                                         //TODO return all nodes having the files
                                     }
                                 }
-                                if(!fileFound) bm.file_req_resp(false, fileNames[f], null,  null, -1); //TODO not very nicely coded
+                                if (!fileFound)
+                                    bm.file_req_resp(false, fileName, null, null, -1); //TODO not very nicely coded
                             }
                         }
                         printNodes();
@@ -99,6 +106,10 @@ public class Server {
         serverThread.start();
     }
 
+
+    /**
+     * Prints all the registered nodes in the Server in a nice format (For debugging)
+     */
     public static synchronized void printNodes(){
         System.out.println("v-------- nodes -----v");
         nodes.forEach(System.out::println);

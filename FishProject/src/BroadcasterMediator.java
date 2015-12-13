@@ -1,6 +1,7 @@
 import java.net.InetAddress;
 
 /**
+ * Represents a Broadcaster Mediator which facilitate the sending of the messages
  * @author Perséas Charoud-Got
  * @author Fanti Samisti
  */
@@ -9,16 +10,30 @@ public class BroadcasterMediator {
     private int to_port;
     private Broadcaster b;
 
+    /**
+     * Creates the BroadcasterMediator and will send the message to the specified ip and port
+     * @param to_add - Msg to be sent to that ip
+     * @param to_port - Msg to be sent to that port
+     */
     public BroadcasterMediator(InetAddress to_add, int to_port){
         this.to_add = to_add.getHostAddress();
         this.to_port = to_port;
     }
 
+    /**
+     * Unregisters a Node from the Server
+     * @param clientPort - port of the sender
+     */
     public void disconnect(int clientPort) {
          b = new Broadcaster(to_add, to_port, "unshare," + clientPort);
         (new Thread(b)).start();
     }
 
+    /**
+     * Registers a Node to the Server
+     * @param fileNames - List of all files the node is sharing
+     * @param clientPort - port of the sender
+     */
     public void share(String [] fileNames, int clientPort){
         String msg = "shared_files," + clientPort + ",";
         for(String fileName: fileNames){
@@ -29,7 +44,12 @@ public class BroadcasterMediator {
         (new Thread(b)).start();
     }
 
-    public void file_req(String fileName, int clientPort){
+    /**
+     * Requests a file from the Server
+     * @param fileName - filename requested
+     * @param clientPort - port of the sender
+     */
+    public void fileReq(String fileName, int clientPort){
         String msg = "file_req," + clientPort + ",";
         msg = msg.concat(fileName+";");
 
@@ -37,23 +57,42 @@ public class BroadcasterMediator {
         (new Thread(b)).start();
     }
 
+    /**
+     * Response of the Server to a File request
+     * @param hasFile - Some Node has the file
+     * @param fileName - Name of the file
+     * @param path - path of the file
+     * @param owner_add - if some Node has the File, it's IP
+     * @param owner_port - if some Node has the File, it's port
+     */
     public void file_req_resp(boolean hasFile, String fileName, String path, InetAddress owner_add, int owner_port){
         if(hasFile){
             String msg = "file_req_resp," + fileName + "_" + path +"," + owner_add + "," + owner_port;
             b = new Broadcaster(to_add, to_port, msg);
         } else{
-            b = new Broadcaster(to_add, to_port, fileName + " not found");
+            b = new Broadcaster(to_add, to_port, "file_req_resp," + fileName + ",not found");
         }
         (new Thread(b)).start();
     }
 
-    public void download_req(String fileName, String path, int clientPort){
+    /**
+     * Download request made by a Node to another Node
+     * @param fileName - Name of the file requested for download
+     * @param path - Location where the file is stored on HD
+     * @param clientPort - port of the sender
+     */
+    public void downloadReq(String fileName, String path, int clientPort){
         String msg = "download_req," + clientPort + "," + fileName + "_" + path;
         b = new Broadcaster(to_add, to_port, msg);
         (new Thread(b)).start();
     }
 
-    public void upload_file(String fileName, String path, int clientPort){//TODO
+    /**
+     * Sends a file
+     * @param fileName - name of the file to be sent
+     * @param path - path of the file to be sent
+     */
+    public void uploadFile(String fileName, String path){//TODO
         FileBroadcaster fB = new FileBroadcaster(path, fileName, to_add, to_port);
         (new Thread(fB)).start();
     }

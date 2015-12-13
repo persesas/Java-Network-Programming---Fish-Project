@@ -2,6 +2,7 @@ import java.net.InetAddress;
 import java.util.HashMap;
 
 /**
+ * Represent a Node, ie. someone sharing or downloading a file
  * @author Perséas Charoud-Got
  * @author Fanti Samisti
  */
@@ -11,6 +12,11 @@ public class Node {
     private int port;
     private HashMap<String, String> files;  //<filename, path>
 
+    /**
+     * Creates a Node
+     * @param ip_add - IP of the node
+     * @param port - Port of the node
+     */
     public Node(InetAddress ip_add, int port){
         this.ip_add = ip_add; //TODO profound copy
         this.port = port;
@@ -53,6 +59,12 @@ public class Node {
         files.remove(fileName);
     }
 
+
+    /**
+     * Returns the path from a given file
+     * @param fileName - file from which we're looking the path
+     * @return path
+     */
     public String getPath(String fileName){
         return files.get(fileName);
     }
