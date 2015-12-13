@@ -19,18 +19,21 @@ public class FileBroadcaster implements Runnable {
     public void run() {
         try {
             File myFile = new File(path + "/" + fileName);
-            System.out.println(toIp +  " " + toPort);
+            System.out.println("sending " + fileName + " to : " + toIp +  " on port: " + toPort);
             Socket socket = new Socket(InetAddress.getByName(toIp), toPort);
 
-            int count;
-            byte[] buffer = new byte[1024];
-
-            OutputStream out = socket.getOutputStream();
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+            out.println("file_data,"+fileName);
             BufferedInputStream in = new BufferedInputStream(new FileInputStream(myFile));
-            while ((count = in.read(buffer)) > 0) {
-                out.write(buffer, 0, count);
-                out.flush();
+
+            byte[] contents = new byte[1024];
+            int bytesRead=0;
+            String strFileContents;
+            while( (bytesRead = in.read(contents)) != -1) {
+                strFileContents = new String(contents, 0, bytesRead);
+                out.println(strFileContents);
             }
+
             socket.close();
 
         } catch (IOException e) {

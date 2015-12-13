@@ -40,7 +40,7 @@ public class Node {
      * @param path - path where the file is located on HD
      */
     public void addFile(String fileName, String path){
-        if(files.containsKey(fileName)) throw new IllegalArgumentException("File already exists");
+        if(files.containsKey(fileName)) System.err.println("File already exists, ignoring request");
         files.put(fileName, path);
     }
 
@@ -49,7 +49,7 @@ public class Node {
      * @param fileName - file name to be removed
      */
     public void removeFile(String fileName){
-        if(!files.containsKey(fileName)) throw new IllegalArgumentException("File doesn't exists");
+        if(!files.containsKey(fileName)) System.err.println("File doesn't exists");
         files.remove(fileName);
     }
 

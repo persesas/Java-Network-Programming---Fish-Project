@@ -46,6 +46,7 @@ public class Client {
         String fileNames [] = {"file1_/", "file2_/", "file3_/"};
         String file = "file1";
         String path = "./data";
+        int otherClientPort = 9002;
 
         InetAddress clientIP = null;
         try {
@@ -75,7 +76,7 @@ public class Client {
                     downloadReq(file, path, serverAddress, serverPort);
                     break;
                 case "upload_req":  //Only for debugging
-                    uploadReq("myFiles.txt", path, clientIP, client_port);
+                    uploadReq("myFiles.txt", path, clientIP, otherClientPort);
                     break;
                 case "help":
                     System.out.print("Available commands:");
