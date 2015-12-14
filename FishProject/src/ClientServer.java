@@ -54,6 +54,15 @@ public class ClientServer {
                                 String name = table[1];
                                 createFile(name, reader);
                                 break;
+                            case "lookup_resp": //pck(lookup_resp,fileName_path,found/notFound, ownerIp, ownerPort)
+                                String nameFile = table[1].split("_")[0];
+                                if(table[2].equals("file not found")) System.out.println(nameFile + " not found");
+                                else {
+                                    String ownerIP = table[3];
+                                    String ownerPort = table[4];
+                                    System.out.println(nameFile + " found at " + ownerIP + " on port " + ownerPort);
+                                }
+
                         }
                     }
 

@@ -97,4 +97,15 @@ public class BroadcasterMediator {
         (new Thread(fB)).start();
     }
 
+    public void lookup(String fileName, int clientPort){
+        b = new Broadcaster(to_add, to_port, "lookup,"+ clientPort + "," +fileName);
+        (new Thread(b)).start();
+    }
+
+    public void lookupResp(String fileName, String path, boolean hasFile, InetAddress owner, int ownerPort){
+        if(hasFile) b = new Broadcaster(to_add, to_port, "lookup_resp," + fileName + "_" + path+",found,"+ owner+ ","+ownerPort);
+        else b = new Broadcaster(to_add, to_port, "lookup_resp," + fileName + ",file not found");
+        (new Thread(b)).start();
+    }
+
 }

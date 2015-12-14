@@ -86,6 +86,12 @@ public class Client {
                 case "exit":
                     unshare(serverAddress, serverPort);
                     break;
+                case "lookup":
+                    if(sc.hasNext())
+                        lookup(sc.next(), serverAddress, serverPort);
+                    else
+                        System.out.println("WARNING: lookup needs file as argument");
+                    break;
                 default:
                     System.err.println("unknown command, please retry");
             }
@@ -116,5 +122,10 @@ public class Client {
     private static void uploadReq(String fileName, String path, InetAddress addDestination, int portDestination){
         BroadcasterMediator bm = new BroadcasterMediator(addDestination, portDestination);
         bm.uploadFile(fileName,path);
+    }
+
+    private static void lookup(String fileName, InetAddress serverAdd, int serverPort){
+        BroadcasterMediator bm = new BroadcasterMediator(serverAdd, serverPort);
+        bm.lookup(fileName,client_port);
     }
 }

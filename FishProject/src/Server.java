@@ -81,17 +81,25 @@ public class Server {
                             System.out.println("Client " + fromIP_Port + " requested " + Arrays.toString(fileNames));
 
                             BroadcasterMediator bm = new BroadcasterMediator(from_inet, clientPort);
-                            boolean fileFound = false;
+
                             for (String fileName : fileNames) {
-                                for (Node node : nodes) {
-                                    fileFound = node.hasFile(fileName);
-                                    if (fileFound) {
-                                        bm.file_req_resp(true, fileName, node.getPath(fileName), node.getIp_add(), node.getPort());
-                                        //TODO return all nodes having the files
-                                    }
+                                Node node = nodeHasFile(fileName);
+                                if(node!=null){//TODO return all nodes having the files
+                                    bm.file_req_resp(true, fileName, node.getPath(fileName), node.getIp_add(), node.getPort());
+                                } else{
+                                    bm.file_req_resp(false, fileName, null, null, -1);
                                 }
-                                if (!fileFound)
-                                    bm.file_req_resp(false, fileName, null, null, -1); //TODO not very nicely coded
+                            }
+
+                        } else if(Objects.equals(command, "lookup")){ // pck(lookup, CLIENT_PORT, file1)
+                            String fileName = table[2];
+                            BroadcasterMediator bm = new BroadcasterMediator(from_inet, clientPort);
+
+                            Node n = nodeHasFile(fileName);
+                            if(nodes!=null){
+                                bm.lookupResp(fileName,n.getPath(fileName),true, n.getIp_add(), n.getPort());
+                            } else{
+                                bm.lookupResp(fileName,null,false, null, -1);
                             }
                         }
                         printNodes();
@@ -104,6 +112,30 @@ public class Server {
 
         Thread serverThread = new Thread(serverTask);
         serverThread.start();
+    }
+
+
+    private Node nodeHasFile(String fileName){
+        for(Node n: nodes){
+            if(n.hasFile(fileName)) return n;
+        }
+        return null;
+    }
+
+    private ArrayList<Node> nodesHavingFile(String fileName){
+        ArrayList<Node> nodes = new ArrayList<>();
+        for(Node n: nodes){
+            if(n.hasFile(fileName)) nodes.add(n);
+        }
+        return nodes;
+    }
+
+    private String createNodesMessage(ArrayList<Node> nodes){
+        StringBuilder sb = new StringBuilder();
+        for (Node n: nodes){
+            sb.append(n.getIp_add()).append(":").append(n.getPort()).append("@");
+        }
+        return sb.toString();
     }
 
 
