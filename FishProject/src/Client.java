@@ -6,6 +6,17 @@ import java.util.HashMap;
 import java.util.Objects;
 import java.util.Scanner;
 
+// TODO DONE (Consider sharing files located in subdirectories of shared_file_path, MUST BE UNIQUE NAME)
+
+// TODO 2 = You are free to invent other messages, such as the server telling the client how many files are currently shared,
+// TODO     or how many clients are currently registered aka if the client wants to update the shared files(new local files etc).
+// TODO 3 = Consider using pattern matching with regular expressions to lookup the server's directory
+// TODO 4 = Use JDBC and a relational database for storing the server directory information.
+// TODO 5 = main security issue related to the way the server part of your client locates a file it has to send.
+// TODO     Your client should allow to retrieve only the files located in the 'shared file' directory and optionally its sub-directories.
+// TODO 6 = Handling A Client Crash
+// TODO 7 = P2P
+
 /**
  * Represents the Client
  * @author Perséas Charoud-Got
@@ -26,7 +37,7 @@ public class Client {
         }
         else if(args.length > 4){
             throw new IllegalArgumentException("The arguments format should be:" +
-                    " \"Client [shared_file_path] [server_address] [server_port]\"");
+                    " \"Client [shared_file_path] [server_address] [server_port] [client_port]\"");
         } else if(args.length == 4){
             shared_file_path = args[0];
             server_address = args[1];
@@ -46,21 +57,16 @@ public class Client {
             e.printStackTrace();
         }
 
-        /*
+        // Print the files that the client is about to share
         System.out.println(".....");
-        HashMap<String, String> files = getFilesFromDir("./");
+        HashMap<String, String> files = getFilesFromDir(shared_file_path);
         for(String fileName: files.keySet()){
             System.out.println(fileName + " - " + files.get(fileName));
         }
         System.out.println(".....");
-        */
 
-        HashMap<String, String> fileNames = new HashMap<>();
-        fileNames.put("myFiles.txt","data");
-        fileNames.put("file2","/");
-        fileNames.put("file3","/");
-        String file = "file1";
-        String path = "./data";
+        String file = "cl2-file2";
+        String path = "./data2";
         int otherClientPort = 9002;
 
         InetAddress clientIP = null;
@@ -73,13 +79,12 @@ public class Client {
 
         String userInput;
         do{
-
             Scanner sc = new Scanner(System.in);
             userInput = sc.next();
 
             switch(userInput){
                 case "share":       // client registers to the server indicating what files he's sharing
-                    share(fileNames, serverAddress, serverPort);
+                    share(files, serverAddress, serverPort);
                     break;
                 case "file_req":    // request from a client to the server for downloading a given file
                     if(sc.hasNext())
@@ -120,7 +125,7 @@ public class Client {
             if (fileEntry.isDirectory()) {
                 files.putAll(getFilesFromDir(fileEntry.getPath()));
             } else {
-                files.put(fileEntry.getName(), fileEntry.getPath());
+                files.put(fileEntry.getName(), fileEntry.getParent());
             }
         }
         return files;
