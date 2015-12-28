@@ -96,7 +96,7 @@ public class Server {
                             BroadcasterMediator bm = new BroadcasterMediator(from_inet, clientPort);
 
                             Node n = nodeHasFile(fileName);
-                            if(nodes!=null){
+                            if(n!=null){
                                 bm.lookupResp(fileName,n.getPath(fileName),true, n.getIp_add(), n.getPort());
                             } else{
                                 bm.lookupResp(fileName,null,false, null, -1);
@@ -133,7 +133,7 @@ public class Server {
     private String createNodesMessage(ArrayList<Node> nodes){
         StringBuilder sb = new StringBuilder();
         for (Node n: nodes){
-            sb.append(n.getIp_add()).append(":").append(n.getPort()).append("@");
+            sb.append(n.getIp_add()).append("::").append(n.getPort()).append("@@");
         }
         return sb.toString();
     }

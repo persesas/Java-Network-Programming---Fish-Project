@@ -1,4 +1,5 @@
 import java.net.InetAddress;
+import java.util.HashMap;
 
 /**
  * Represents a Broadcaster Mediator which facilitate the sending of the messages
@@ -34,10 +35,10 @@ public class BroadcasterMediator {
      * @param fileNames - List of all files the node is sharing
      * @param clientPort - port of the sender
      */
-    public void share(String [] fileNames, int clientPort){
+    public void share(HashMap<String, String> fileNames, int clientPort){
         String msg = "shared_files," + clientPort + ",";
-        for(String fileName: fileNames){
-            msg = msg.concat(fileName+";");
+        for(String fileName: fileNames.keySet()){
+            msg = msg.concat(fileName+"_"+fileNames.get(fileName)+";");
         }
 
         b = new Broadcaster(to_add, to_port, msg);

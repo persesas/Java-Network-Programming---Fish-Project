@@ -1,6 +1,8 @@
+import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.Scanner;
 
@@ -44,7 +46,19 @@ public class Client {
             e.printStackTrace();
         }
 
-        String fileNames [] = {"myFiles.txt_data/", "file2_/", "file3_/"};
+        /*
+        System.out.println(".....");
+        HashMap<String, String> files = getFilesFromDir("./");
+        for(String fileName: files.keySet()){
+            System.out.println(fileName + " - " + files.get(fileName));
+        }
+        System.out.println(".....");
+        */
+
+        HashMap<String, String> fileNames = new HashMap<>();
+        fileNames.put("myFiles.txt","data");
+        fileNames.put("file2","/");
+        fileNames.put("file3","/");
         String file = "file1";
         String path = "./data";
         int otherClientPort = 9002;
@@ -64,29 +78,29 @@ public class Client {
             userInput = sc.next();
 
             switch(userInput){
-                case "share":
+                case "share":       // client registers to the server indicating what files he's sharing
                     share(fileNames, serverAddress, serverPort);
                     break;
-                case "file_req":
+                case "file_req":    // request from a client to the server for downloading a given file
                     if(sc.hasNext())
                         fileReq(sc.next(), serverAddress, serverPort);
                     else
                         System.out.println("WARNING: fileReq needs file(s) as arguments");
                     break;
-                case "download_req":
+                case "download_req": // request from a client to another client to download a given file
                     downloadReq(file, path, serverAddress, serverPort);
                     break;
-                case "upload_req":  //Only for debugging
+                case "upload_req":  //
                     uploadReq("myFiles.txt", path, clientIP, otherClientPort);
                     break;
-                case "help":
+                case "help":    // command indicating to client what are the available commands
                     System.out.print("Available commands:");
                     System.out.println(Arrays.toString(commands));
                     break;
-                case "exit":
+                case "exit":    // disconnects client from server
                     unshare(serverAddress, serverPort);
                     break;
-                case "lookup":
+                case "lookup":  // request from client to server asking if a particular file is available
                     if(sc.hasNext())
                         lookup(sc.next(), serverAddress, serverPort);
                     else
@@ -99,7 +113,20 @@ public class Client {
         }while(!Objects.equals(userInput, "exit"));
     }
 
-    private static void share(String [] fileNames, InetAddress serverAdd, int serverPort){
+    private static HashMap<String, String> getFilesFromDir(String path){
+        HashMap<String, String> files = new HashMap<>();
+        final File folder = new File(path);
+        for (final File fileEntry : folder.listFiles()) {
+            if (fileEntry.isDirectory()) {
+                files.putAll(getFilesFromDir(fileEntry.getPath()));
+            } else {
+                files.put(fileEntry.getName(), fileEntry.getPath());
+            }
+        }
+        return files;
+    }
+
+    private static void share(HashMap<String, String> fileNames, InetAddress serverAdd, int serverPort){
         BroadcasterMediator bm = new BroadcasterMediator(serverAdd, serverPort);
         bm.share(fileNames, client_port);
     }
