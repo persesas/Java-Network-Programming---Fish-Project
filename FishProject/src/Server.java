@@ -97,6 +97,15 @@ public class Server {
 
                             String msgWithNodes = createRegexMessage(searchNodes(query));
                             bm.lookupResp(query, msgWithNodes);
+                        } else if(Objects.equals(command, "state")) { // pck(lookup, CLIENT_PORT, file1)
+                            int idxNode = findIdxNode(fromIP_Port);
+                            BroadcasterMediator bm = new BroadcasterMediator(from_inet, clientPort);
+                            if(idxNode<0){ // not  shared anything yet
+                                bm.stateResp("notfound");
+                            } else {
+                                Node n = nodes.get(idxNode);
+                                bm.stateResp(n.filesToString());
+                            }
                         }
                         printNodes();
                     }

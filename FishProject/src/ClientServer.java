@@ -30,6 +30,13 @@ public class ClientServer {
                         String command = table[0];
 
                         switch (command) {
+                            case "state_resp":
+                                if(table[1].equals("notfound"))
+                                    System.out.println("State: You haven\'t shared your files yet.");
+                                else {
+                                    System.out.println("Server state for your files: " + table[1]);
+                                }
+                                break;
                             case "file_req_resp":  //pck(file_req_resp,fileName,ip1::port1::path1<->ip2::port2::path2<->...)
                                 if (!table[2].equals("not found")) {
                                     String fileName = table[1];

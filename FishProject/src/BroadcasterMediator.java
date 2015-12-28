@@ -116,4 +116,13 @@ public class BroadcasterMediator {
         (new Thread(b)).start();
     }
 
+    public void getState(int clientPort) {
+        b = new Broadcaster(to_add, to_port, "state,"+ clientPort);
+        (new Thread(b)).start();
+    }
+
+    public void stateResp(String msgWithNodes) {
+        b = new Broadcaster(to_add, to_port, "state_resp,"+ msgWithNodes);
+        (new Thread(b)).start();
+    }
 }

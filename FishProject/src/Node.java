@@ -104,4 +104,14 @@ public class Node {
     public String toString(){
         return "ip: " + ip_add.getHostAddress() + " port:" + port + " size shared:" + files.size();
     }
+
+    public String filesToString() {
+        StringBuffer sb = new StringBuffer();
+        for(String filename: files.keySet()) {
+            sb.append(filename + "_" + files.get(filename));
+            sb.append(";");
+        }
+
+        return sb.toString();
+    }
 }
