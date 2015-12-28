@@ -10,7 +10,7 @@ public class ClientServer {
 
 
     /**
-     * Creates the Server Side of the Clietn listening to a given port
+     * Creates the Server Side of the Client listening to a given port
      * @param port - Port listening to
      */
     public ClientServer(int port) {
@@ -28,12 +28,16 @@ public class ClientServer {
                         String command = table[0];
 
                         switch (command) {
-                            case "file_req_resp":  //pck(file_req_resp,file1_dest,ipOwner,portOwner)
+                            case "file_req_resp":  //pck(file_req_resp,fileName,ip1::port1::path1<->ip2::port2::path2<->...)
                                 if (!table[2].equals("not found")) {
-                                    String fileName = table[1].split("_")[0];
-                                    String path = table[1].split("_")[1];
-                                    InetAddress ipOwner = InetAddress.getByName(table[2].substring(1));
-                                    int portOwner = Integer.parseInt(table[3]);
+                                    String fileName = table[1];
+                                    String [] nodes = table[2].split("<->");
+                                    for(String s: nodes){
+                                        System.out.println("Node having file - ip: " + s.split("::")[0]+ " port: " + s.split("::")[1] + " path: "+ s.split("::")[2]);
+                                    }
+                                    String path = nodes[0].split("::")[2];
+                                    InetAddress ipOwner = InetAddress.getByName(nodes[0].split("::")[0].substring(1));
+                                    int portOwner = Integer.parseInt(nodes[0].split("::")[1]);
 
                                     BroadcasterMediator bm = new BroadcasterMediator(ipOwner, portOwner);
                                     bm.downloadReq(fileName, path, port);
@@ -54,15 +58,16 @@ public class ClientServer {
                                 String name = table[1];
                                 createFile(name, reader);
                                 break;
-                            case "lookup_resp": //pck(lookup_resp,fileName_path,found/notFound, ownerIp, ownerPort)
-                                String nameFile = table[1].split("_")[0];
+                            case "lookup_resp": //pck(lookup_resp,fileName_path,found/notFound, ip1::port1::path1<->ip2::port2::path2)
+                                String nameFile = table[1];
                                 if(table[2].equals("file not found")) System.out.println(nameFile + " not found");
                                 else {
-                                    String ownerIP = table[3];
-                                    String ownerPort = table[4];
-                                    System.out.println(nameFile + " found at " + ownerIP + " on port " + ownerPort);
+                                    String [] nodes = table[2].split("<->");
+                                    for(String s: nodes){
+                                        System.out.println("Found at - ip: " + s.split("::")[0]+ " port: " + s.split("::")[1] + " path: "+ s.split("::")[2]);
+                                    }
                                 }
-
+                                break;
                         }
                     }
 

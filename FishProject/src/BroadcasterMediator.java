@@ -60,16 +60,13 @@ public class BroadcasterMediator {
 
     /**
      * Response of the Server to a File request
-     * @param hasFile - Some Node has the file
      * @param fileName - Name of the file
-     * @param path - path of the file
-     * @param owner_add - if some Node has the File, it's IP
-     * @param owner_port - if some Node has the File, it's port
+     * @param msg - All nodes containing the fileName
      */
-    public void file_req_resp(boolean hasFile, String fileName, String path, InetAddress owner_add, int owner_port){
-        if(hasFile){
-            String msg = "file_req_resp," + fileName + "_" + path +"," + owner_add + "," + owner_port;
-            b = new Broadcaster(to_add, to_port, msg);
+    public void file_req_resp(String fileName, String msg){
+        if(!msg.equals("")){
+            String msgToSent = "file_req_resp," + fileName + "," + msg;
+            b = new Broadcaster(to_add, to_port, msgToSent);
         } else{
             b = new Broadcaster(to_add, to_port, "file_req_resp," + fileName + ",not found");
         }
@@ -98,13 +95,23 @@ public class BroadcasterMediator {
         (new Thread(fB)).start();
     }
 
+    /**
+     * Sends a lookup request
+     * @param fileName - name of the file
+     * @param clientPort - port of the sending client
+     */
     public void lookup(String fileName, int clientPort){
         b = new Broadcaster(to_add, to_port, "lookup,"+ clientPort + "," +fileName);
         (new Thread(b)).start();
     }
 
-    public void lookupResp(String fileName, String path, boolean hasFile, InetAddress owner, int ownerPort){
-        if(hasFile) b = new Broadcaster(to_add, to_port, "lookup_resp," + fileName + "_" + path+",found,"+ owner+ ","+ownerPort);
+    /**
+     * Sends the reply of a lookup request
+     * @param fileName - name of the file
+     * @param msgWithNodes - String containing all nodes containing the file
+     */
+    public void lookupResp(String fileName, String msgWithNodes){
+        if(!msgWithNodes.equals("")) b = new Broadcaster(to_add, to_port, "lookup_resp," + fileName + "found," + msgWithNodes);
         else b = new Broadcaster(to_add, to_port, "lookup_resp," + fileName + ",file not found");
         (new Thread(b)).start();
     }

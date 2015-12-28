@@ -77,6 +77,10 @@ public class Node {
         return files.containsKey(fileName);
     }
 
+    /**
+     * Overrides toString method of Object
+     * @return ip: ip_add port: port size shared: files.size()
+     */
     @Override
     public String toString(){
         return "ip: " + ip_add.getHostAddress() + " port:" + port + " size shared:" + files.size();

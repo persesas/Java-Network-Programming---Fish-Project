@@ -83,24 +83,16 @@ public class Server {
                             BroadcasterMediator bm = new BroadcasterMediator(from_inet, clientPort);
 
                             for (String fileName : fileNames) {
-                                Node node = nodeHasFile(fileName);
-                                if(node!=null){//TODO return all nodes having the files
-                                    bm.file_req_resp(true, fileName, node.getPath(fileName), node.getIp_add(), node.getPort());
-                                } else{
-                                    bm.file_req_resp(false, fileName, null, null, -1);
-                                }
+                                String msgWithNodes = createNodesMessage(fileName,nodesHavingFile(fileName));
+                                bm.file_req_resp(fileName, msgWithNodes);
                             }
 
                         } else if(Objects.equals(command, "lookup")){ // pck(lookup, CLIENT_PORT, file1)
                             String fileName = table[2];
                             BroadcasterMediator bm = new BroadcasterMediator(from_inet, clientPort);
 
-                            Node n = nodeHasFile(fileName);
-                            if(n!=null){
-                                bm.lookupResp(fileName,n.getPath(fileName),true, n.getIp_add(), n.getPort());
-                            } else{
-                                bm.lookupResp(fileName,null,false, null, -1);
-                            }
+                            String msgWithNodes = createNodesMessage(fileName,nodesHavingFile(fileName));
+                            bm.lookupResp(fileName, msgWithNodes);
                         }
                         printNodes();
                     }
@@ -123,17 +115,17 @@ public class Server {
     }
 
     private ArrayList<Node> nodesHavingFile(String fileName){
-        ArrayList<Node> nodes = new ArrayList<>();
+        ArrayList<Node> returnNodes = new ArrayList<>();
         for(Node n: nodes){
-            if(n.hasFile(fileName)) nodes.add(n);
+            if(n.hasFile(fileName)) returnNodes.add(n);
         }
-        return nodes;
+        return returnNodes;
     }
 
-    private String createNodesMessage(ArrayList<Node> nodes){
+    private String createNodesMessage(String fileName, ArrayList<Node> nodes){
         StringBuilder sb = new StringBuilder();
         for (Node n: nodes){
-            sb.append(n.getIp_add()).append("::").append(n.getPort()).append("@@");
+            sb.append(n.getIp_add()).append("::").append(n.getPort()).append("::").append(n.getPath(fileName)).append("<->");
         }
         return sb.toString();
     }
