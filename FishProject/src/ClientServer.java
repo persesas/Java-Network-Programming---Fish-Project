@@ -12,12 +12,14 @@ public class ClientServer {
     /**
      * Creates the Server Side of the Client listening to a given port
      * @param port - Port listening to
+     * @param shared_file_path
      */
-    public ClientServer(int port) {
+    public ClientServer(int port, String shared_file_path) {
         Runnable serverTask = () -> {
 
             try {
                 ServerSocket serverSocket = new ServerSocket(port);
+
                 while(true) {
                     Socket socket = serverSocket.accept();
 
@@ -49,6 +51,11 @@ public class ClientServer {
                                 int portDestination = Integer.parseInt(table[1]);
                                 String fileName = table[2].split("_")[0];
                                 String path = table[2].split("_")[1];
+                                // Check if the path is aa legitimate one
+                                if(!path.startsWith(shared_file_path)) {
+                                    System.err.println("Illegal path: " + path);
+                                    break;
+                                }
 
                                 BroadcasterMediator bm = new BroadcasterMediator(socket.getInetAddress(), portDestination);
                                 bm.uploadFile(fileName, path);
