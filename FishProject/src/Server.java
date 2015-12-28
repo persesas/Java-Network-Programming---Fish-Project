@@ -6,6 +6,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Objects;
 
 /**
@@ -88,11 +89,14 @@ public class Server {
                             }
 
                         } else if(Objects.equals(command, "lookup")){ // pck(lookup, CLIENT_PORT, file1)
-                            String fileName = table[2];
+                            /*
+                                reply: node1:file1,file2;node2:file3,file4
+                             */
+                            String query = table[2];
                             BroadcasterMediator bm = new BroadcasterMediator(from_inet, clientPort);
 
-                            String msgWithNodes = createNodesMessage(fileName,nodesHavingFile(fileName));
-                            bm.lookupResp(fileName, msgWithNodes);
+                            String msgWithNodes = createRegexMessage(searchNodes(query));
+                            bm.lookupResp(query, msgWithNodes);
                         }
                         printNodes();
                     }
@@ -106,6 +110,35 @@ public class Server {
         serverThread.start();
     }
 
+    private HashMap searchNodes(String query) {
+        HashMap<Node, ArrayList<String>> result = new HashMap<>();
+
+        for(Node n : nodes) {
+            ArrayList<String> matches = n.search(query);
+            if(matches.size() != 0) result.put(n, matches);
+        }
+
+        return result;
+    }
+
+    private String createRegexMessage(HashMap<Node, ArrayList<String>> results) {
+        StringBuilder sb = new StringBuilder();
+        for (Node n: results.keySet()){
+            for(String filename: results.get(n)) {
+                String[] data = filename.split("_");
+                sb.append(n.getIp_add())
+                  .append("::")
+                  .append(n.getPort())
+                  .append("::")
+                  .append(data[0])
+                  .append("::")
+                  .append(data[1])
+                        .append("<->");
+            }
+        }
+        return sb.toString();
+    }
+
 
     private Node nodeHasFile(String fileName){
         for(Node n: nodes){
@@ -114,22 +147,22 @@ public class Server {
         return null;
     }
 
-    private ArrayList<Node> nodesHavingFile(String fileName){
+    private ArrayList<Node> nodesHavingFile(String filename){
         ArrayList<Node> returnNodes = new ArrayList<>();
         for(Node n: nodes){
-            if(n.hasFile(fileName)) returnNodes.add(n);
+            //System.out.println(n.search(pattern));
+            if(n.hasFile(filename)) returnNodes.add(n);
         }
         return returnNodes;
     }
 
-    private String createNodesMessage(String fileName, ArrayList<Node> nodes){
+    private String createNodesMessage(String filename, ArrayList<Node> nodes){
         StringBuilder sb = new StringBuilder();
         for (Node n: nodes){
-            sb.append(n.getIp_add()).append("::").append(n.getPort()).append("::").append(n.getPath(fileName)).append("<->");
+            sb.append(n.getIp_add()).append("::").append(n.getPort()).append("::").append(n.getPath(filename)).append("<->");
         }
         return sb.toString();
     }
-
 
     /**
      * Prints all the registered nodes in the Server in a nice format (For debugging)

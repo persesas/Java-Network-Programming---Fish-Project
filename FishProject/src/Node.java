@@ -1,5 +1,9 @@
+import java.lang.reflect.Array;
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Represent a Node, ie. someone sharing or downloading a file
@@ -71,10 +75,25 @@ public class Node {
 
     /**
      * Returns if a file is shared or not.
-     * @param fileName - file name to be searched for
+     * @param filename - file name to be searched for
      */
-    public boolean hasFile(String fileName){
-        return files.containsKey(fileName);
+    public boolean hasFile(String filename){
+        //System.out.println(filename.matches("\\d+"));
+        return files.containsKey(filename);
+    }
+
+    /**
+     * Returns a list of file_dir that match the pattern
+     * @param pattern - regex to search with
+     */
+    public ArrayList<String> search(String pattern) {
+        ArrayList<String> result = new ArrayList<>();
+        Pattern p = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
+        for(String file: files.keySet()) {
+            Matcher m = p.matcher(file);
+            if(m.find()) result.add(file + "_" + files.get(file));
+        }
+        return result;
     }
 
     /**

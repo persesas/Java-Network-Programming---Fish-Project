@@ -69,9 +69,10 @@ public class ClientServer {
                                 String nameFile = table[1];
                                 if(table[2].equals("file not found")) System.out.println(nameFile + " not found");
                                 else {
-                                    String [] nodes = table[2].split("<->");
+                                    String [] nodes = table[3].split("<->");
                                     for(String s: nodes){
-                                        System.out.println("Found at - ip: " + s.split("::")[0]+ " port: " + s.split("::")[1] + " path: "+ s.split("::")[2]);
+                                        System.out.println("Found at - ip: " + s.split("::")[0]+ " port: " + s.split("::")[1]
+                                                + " name: "+ s.split("::")[2] + " path: " + s.split("::")[3]);
                                     }
                                 }
                                 break;

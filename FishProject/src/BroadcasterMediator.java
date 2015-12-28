@@ -111,7 +111,7 @@ public class BroadcasterMediator {
      * @param msgWithNodes - String containing all nodes containing the file
      */
     public void lookupResp(String fileName, String msgWithNodes){
-        if(!msgWithNodes.equals("")) b = new Broadcaster(to_add, to_port, "lookup_resp," + fileName + "found," + msgWithNodes);
+        if(!msgWithNodes.equals("")) b = new Broadcaster(to_add, to_port, "lookup_resp," + fileName + ",found," + msgWithNodes);
         else b = new Broadcaster(to_add, to_port, "lookup_resp," + fileName + ",file not found");
         (new Thread(b)).start();
     }
