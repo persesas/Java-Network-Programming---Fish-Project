@@ -10,9 +10,8 @@ import java.util.Scanner;
 // TODO DONE (Main security issue related to the way the server part of your client locates a file it has to send.)
 // TODO DONE (Your client should allow to retrieve only the files located in the 'shared file' directory and optionally its sub-directories.)
 // TODO DONE (Consider using pattern matching with regular expressions to lookup the server's directory)
-
-// TODO 2 = You are free to invent other messages, such as the server telling the client how many files are currently shared,
-// TODO     or how many clients are currently registered aka if the client wants to update the shared files(new local files etc).
+// TODO DONE (You are free to invent other messages, such as the server telling the client how many files are currently shared,)
+// TODO DONE (or how many clients are currently registered aka if the client wants to update the shared files(new local files etc).)
 
 // TODO 4 = Use JDBC and a relational database for storing the server directory information.
 // TODO 6 = Handling A Client Crash
