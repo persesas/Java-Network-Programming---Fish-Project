@@ -125,4 +125,14 @@ public class BroadcasterMediator {
         b = new Broadcaster(to_add, to_port, "state_resp,"+ msgWithNodes);
         (new Thread(b)).start();
     }
+
+    public void ping(int serverPort){
+        b = new Broadcaster(to_add, to_port, "ping," + serverPort);
+        (new Thread(b)).start();
+    }
+
+    public void pingResp(int clientPort){
+        b = new Broadcaster(to_add, to_port, "ping_resp," + clientPort);
+        (new Thread(b)).start();
+    }
 }

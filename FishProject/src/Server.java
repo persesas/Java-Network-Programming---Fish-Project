@@ -16,7 +16,7 @@ import java.util.Objects;
  */
 public class Server {
     private volatile static ArrayList<Node> nodes = new ArrayList<>();
-
+    private CrashHandler crashHandler;
     public static void main(String[] args) {
         // int port = Integer.parseInt(args[0]);
         new Server(8000);
@@ -39,6 +39,9 @@ public class Server {
      */
     public Server(int port) {
         System.out.println("Server running and waiting for connections...");
+
+        crashHandler = new CrashHandler(nodes, port); // start crash Handler
+
         Runnable serverTask = () -> {
             try {
                 ServerSocket serverSocket = new ServerSocket(port);
@@ -73,10 +76,12 @@ public class Server {
                                 String dest = sharedFile.split("_")[1];
                                 nodes.get(idxNode).addFile(name, dest);
                             }
+                            printNodes();
                         }
                         else if(Objects.equals(command, "unshare")){  // pck(unshare, CLIENT_PORT)
                             System.out.println("Client unshared files " + fromIP_Port);
                             nodes.remove(findIdxNode(fromIP_Port));
+                            printNodes();
                         }
                         else if(Objects.equals(command, "file_req")){ // pck(fileReq, CLIENT_PORT, fileName1;fileName2;...)
                             String fileNames[] = table[2].split(";");
@@ -107,8 +112,10 @@ public class Server {
                                 Node n = nodes.get(idxNode);
                                 bm.stateResp(n.filesToString());
                             }
+                        } else if(Objects.equals(command,"ping_resp")){  // pck(ping,)
+                            crashHandler.receivedPing(new Node(socket.getInetAddress(), clientPort));
                         }
-                        printNodes();
+                        crashHandler.setNodes(nodes); // updating list of nodes
                     }
                 }
             }catch (IOException e) {

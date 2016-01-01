@@ -83,6 +83,10 @@ public class ClientServer {
                                     }
                                 }
                                 break;
+                            case "ping":
+                                int p = Integer.parseInt(table[1]);
+                                BroadcasterMediator bM = new BroadcasterMediator(socket.getInetAddress(), p);
+                                bM.pingResp(port);
                         }
                     }
 

@@ -38,7 +38,9 @@ public class Broadcaster implements Runnable {
             socket.close();
 
         } catch (UnknownHostException e) {
-            System.out.println("Unknown host");
+            System.out.println("(Broadcaster) Unknown host");
+        } catch (ConnectException e){
+            System.err.println("(Broadcaster) Connection refused, nobody there");
         } catch (IOException e) {
             e.printStackTrace();
         }
