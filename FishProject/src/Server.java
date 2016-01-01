@@ -17,6 +17,8 @@ import java.util.Objects;
 public class Server {
     private volatile static ArrayList<Node> nodes = new ArrayList<>();
     private CrashHandler crashHandler;
+    private DBMediator dbMediator;
+
     public static void main(String[] args) {
         // int port = Integer.parseInt(args[0]);
         new Server(8000);
@@ -41,6 +43,7 @@ public class Server {
         System.out.println("Server running and waiting for connections...");
 
         crashHandler = new CrashHandler(nodes, port); // start crash Handler
+        //dbMediator = new DBMediator();
 
         Runnable serverTask = () -> {
             try {
@@ -64,7 +67,6 @@ public class Server {
                         if(Objects.equals(command, "shared_files")){ // pck(shared_files, CLIENT_PORT, file1_dest1;fil2_dest2:file3_dest3;...
                             String sharedFiles[] = table[2].split(";");
                             System.out.println("Client connected from " + fromIP_Port + ", shared files: " + Arrays.toString(sharedFiles));
-
                             int idxNode = findIdxNode(fromIP_Port);
                             if(idxNode<0){ // New node
                                 nodes.add(new Node(from_inet, clientPort));
@@ -180,6 +182,7 @@ public class Server {
         }
         return sb.toString();
     }
+
 
     /**
      * Prints all the registered nodes in the Server in a nice format (For debugging)

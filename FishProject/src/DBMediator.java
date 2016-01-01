@@ -1,6 +1,8 @@
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Random;
 
 /**
  * Represents the Database Mediator
@@ -17,24 +19,29 @@ public class DBMediator {
     private PreparedStatement getFileStatement;
     private PreparedStatement rmvFileFromNodeStatement;
 
+    /**
+     * Constructor of the Database Mediator
+     */
     public DBMediator(){
         try {
             Class.forName("org.mariadb.jdbc.Driver");
             connection = DriverManager.getConnection(
                     "jdbc:mariadb://localhost:3306/p2p", "root", "root");
-            prepareStatements();
             createTables();
+            prepareStatements();
         } catch (ClassNotFoundException | SQLException e) {
             e.printStackTrace();
         }
     }
 
+    // creates tables for the database
     private void createTables() {
         try {
             Statement statement = connection.createStatement();
 
             statement.executeUpdate("CREATE TABLE IF NOT EXISTS clients "
-                    + "(id VARCHAR(32) NOT NULL,"
+                    + "(ip VARCHAR(32) NOT NULL,"
+                    + " port VARCHAR(32) NOT NULL,"
                     + " fileName VARCHAR(64) NOT NULL,"
                     + " path VARCHAR(128) NOT NULL);");
 
@@ -43,15 +50,19 @@ public class DBMediator {
         }
     }
 
+    // Prepares statements
     private void prepareStatements() throws SQLException {
-
-        newNodeStatement = connection.prepareStatement("INSERT INTO clients VALUES(?, ?, ?)");  // adds a new node
-        deleteNodeStatement = connection.prepareStatement("DELETE FROM clients WHERE id=?");    // deletes a node
-        rmvFileFromNodeStatement = connection.prepareStatement("DELETE FROM clients WHERE fileName = ? and id = ?");    // rmv a file from a given node
+        newNodeStatement = connection.prepareStatement("INSERT INTO clients VALUES(?, ?, ?, ?)");  // adds a new node
+        deleteNodeStatement = connection.prepareStatement("DELETE FROM clients WHERE ip=? AND port=?");    // deletes a node
+        rmvFileFromNodeStatement = connection.prepareStatement("DELETE FROM clients WHERE fileName = ? AND ip = ? AND port=?");    // rmv a file from a given node
         allFilesStatement = connection.prepareStatement("SELECT DISTINCT fileName FROM clients");   // returns all files
         getFileStatement = connection.prepareStatement("SELECT * FROM clients where fileName=?");   // returns all files with a given fileName
     }
 
+    /**
+     *
+     * @return an instance of DBMediatore
+     */
     public static DBMediator getInstance(){
         if(instance == null){
             instance = new DBMediator();
@@ -59,23 +70,30 @@ public class DBMediator {
         return instance;
     }
 
-    public boolean createNode(String fileName, String path){
+    /**
+     * Creates a Node
+     * @param ip - ip of the Node
+     * @param port - port of the Node
+     * @param fileName - fileName that is shared from the Node
+     * @param path - path of the file that's being shared
+     * @return true if insertion was successful false if wasn't
+     */
+    public boolean createNode(String ip, String port, String fileName, String path){
         try {
-            Random r = new Random();
-            String id = Integer.toString(r.nextInt(1000));
-
-            newNodeStatement.setString(1, id);
-            newNodeStatement.setString(2, fileName);
-            newNodeStatement.setString(3, path);
+            newNodeStatement.setString(1, ip);
+            newNodeStatement.setString(2, port);
+            newNodeStatement.setString(3, fileName);
+            newNodeStatement.setString(4, path);
 
             int rows = newNodeStatement.executeUpdate();
             if (rows == 1) {
-                System.out.println("(DBMediator) Client created: " + id + " filename " + fileName + " path " + path);
+                System.out.println("(DBMediator) Client created: " + ip + " " + port + " filename " + fileName + " path " + path);
                 return true;
             } else {
                 throw new RejectedException("(DBMediator) Cannot create client :" + fileName);
             }
         } catch (SQLException e) {
+            e.printStackTrace();
             return false;
         } catch (RejectedException e) {
             e.printStackTrace();
@@ -83,32 +101,51 @@ public class DBMediator {
         }
     }
 
-    public void deleteNode(String fileName) {
+    /**
+     * Deletes a Node from the Database
+     * @param ip - ip of the Node to be delete
+     * @param port - port of the Node to be delete
+     */
+    public void deleteNode(String ip, String port) {
         try {
-            deleteNodeStatement.setString(1, fileName);
+            deleteNodeStatement.setString(1, ip);
+            deleteNodeStatement.setString(2, port);
+
             int rows = deleteNodeStatement.executeUpdate();
             if (rows == 1) {
-                System.out.println("(DBMediator) Deleted " + fileName);
+                System.out.println("(DBMediator) Deleted " + ip + " " + port);
             }
             else {
-                throw new RejectedException("(DBMediator) Failed to delete " + fileName);
+                throw new RejectedException("(DBMediator) Failed to delete " + ip + " " + port);
             }
         } catch (SQLException | RejectedException e) {
             e.printStackTrace();
         }
     }
 
-    public void rmvFileFromNodes(String fileName, int id) {
+    /**
+     * Removes a file from a Node
+     * @param ip - ip of Node
+     * @param port - port of Node
+     * @param fileName - fileName to be deleted from Node
+     */
+    public void rmvFileFromNode(String ip, String port, String fileName) {
         try {
-            rmvFileFromNodeStatement.setString(id, fileName);
+            rmvFileFromNodeStatement.setString(1, ip);
+            rmvFileFromNodeStatement.setString(2, port);
+            rmvFileFromNodeStatement.setString(3, fileName);
             int rows = rmvFileFromNodeStatement.executeUpdate();
-            if (rows == 1) System.out.println("(DBMediator) Deleted file" + fileName + " from " + id);
-            else throw new RejectedException("(DBMediator) Failed to delete file " + fileName + " from " + id);
+            if (rows == 1) System.out.println("(DBMediator) Deleted file" + fileName + " from " + ip + " " + port);
+            else throw new RejectedException("(DBMediator) Failed to delete file " + fileName + " from " + ip + " " + port);
         } catch (SQLException | RejectedException e) {
             e.printStackTrace();
         }
     }
 
+    /**
+     *
+     * @return all files in the database
+     */
     public HashMap<String, String> allFiles() {
         HashMap<String, String> files = new HashMap<>();
         try {
@@ -123,19 +160,27 @@ public class DBMediator {
         return files;
     }
 
-
-    public HashMap<String, String> getFile(String fileName) {
-        HashMap<String, String> files = new HashMap<>();
+    /**
+     * Get all the nodes containing a particular file
+     * @param fileName - Requested file
+     * @return all nodes containing the given fileName
+     */
+    public ArrayList<Node> getFile(String fileName) {
+        ArrayList<Node> nodes = new ArrayList<>();
         try {
             getFileStatement.setString(1, fileName);
             ResultSet rs = getFileStatement.executeQuery();
             while(rs.next()){
-                files.put(rs.getString("fileName"), rs.getString("path"));
+                Node n = new Node(InetAddress.getByName(rs.getString("ip")), Integer.parseInt(rs.getString("port")));
+                n.addFile(rs.getString("fileName"), rs.getString("path"));
+                nodes.add(n);
             }
         } catch (SQLException e) {
             e.printStackTrace();
             return null;
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
         }
-        return files;
+        return nodes;
     }
 }
