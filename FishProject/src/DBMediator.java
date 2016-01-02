@@ -117,14 +117,10 @@ public class DBMediator {
             deleteNodeStatement.setString(1, ip);
             deleteNodeStatement.setString(2, port);
 
-            int rows = deleteNodeStatement.executeUpdate();
-            if (rows == 1) {
-                System.out.println("(DBMediator) Deleted " + ip + " " + port);
-            }
-            else {
-                throw new RejectedException("(DBMediator) Failed to delete " + ip + " " + port);
-            }
-        } catch (SQLException | RejectedException e) {
+            deleteNodeStatement.executeUpdate();
+            System.out.println("(DBMediator) Deleted " + ip + " " + port);
+
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
@@ -202,10 +198,7 @@ public class DBMediator {
                 Node n = new Node(InetAddress.getByName(rs.getString("ip")), Integer.parseInt(rs.getString("port")));
                 nodes.add(n);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return null;
-        } catch (UnknownHostException e) {
+        } catch (SQLException | UnknownHostException e) {
             e.printStackTrace();
         }
         return nodes;

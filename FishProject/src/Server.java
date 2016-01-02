@@ -15,23 +15,12 @@ import java.util.Objects;
  * @author Fanti Samisti
  */
 public class Server {
-    private volatile static ArrayList<Node> nodes = new ArrayList<>();
     private CrashHandler crashHandler;
     private DBMediator dbMediator;
 
     public static void main(String[] args) {
         // int port = Integer.parseInt(args[0]);
         new Server(8000);
-    }
-
-
-    //Given a String from, returns the position in the ArrayList nodes where the from is found and -1 if not found
-    private int findIdxNode(String from){
-        for (int i = 0; i < nodes.size(); i++) {
-            if(from.contains(nodes.get(i).getIp_add().getHostAddress() + " " + nodes.get(i).getPort()))
-                return i;
-        }
-        return -1;
     }
 
 
@@ -42,7 +31,7 @@ public class Server {
     public Server(int port) {
         System.out.println("Server running and waiting for connections...");
 
-        crashHandler = new CrashHandler(nodes, port); // start crash Handler
+        crashHandler = new CrashHandler(port); // start crash Handler
         dbMediator = DBMediator.getInstance();
 
         Runnable serverTask = () -> {
@@ -57,7 +46,7 @@ public class Server {
                     String data;
 
                     if((data = reader.readLine()) != null){
-                        System.out.println(data);
+                        System.out.println("(Server) " + data);
 
                         String [] table = data.split(",");
                         String command = table[0];
@@ -66,30 +55,23 @@ public class Server {
 
                         if(Objects.equals(command, "shared_files")){ // pck(shared_files, CLIENT_PORT, file1_dest1;fil2_dest2:file3_dest3;...
                             String sharedFiles[] = table[2].split(";");
-                            System.out.println("Client connected from " + fromIP_Port + ", shared files: " + Arrays.toString(sharedFiles));
-                            int idxNode = findIdxNode(fromIP_Port);
-                            if(idxNode<0){ // New node
-                                nodes.add(new Node(from_inet, clientPort));
-                                idxNode = nodes.size()-1;
-                            }
+                            System.out.println("(Server) Client connected from " + fromIP_Port + ", shared files: " + Arrays.toString(sharedFiles));
 
                             for (String sharedFile : sharedFiles) {
                                 String name = sharedFile.split("_")[0];
                                 String dest = sharedFile.split("_")[1];
-                                nodes.get(idxNode).addFile(name, dest);
                                 dbMediator.createNode(from_inet.getHostAddress(), Integer.toString(clientPort), name, dest);
                             }
-                            printNodes();
+                            //printNodes();
                         }
                         else if(Objects.equals(command, "unshare")){  // pck(unshare, CLIENT_PORT)
-                            System.out.println("Client unshared files " + fromIP_Port);
-                            nodes.remove(findIdxNode(fromIP_Port));
+                            System.out.println("(Server) Client unshared files " + fromIP_Port);
                             dbMediator.deleteNode(from_inet.getHostAddress(), Integer.toString(clientPort));
-                            printNodes();
+                            //printNodes();
                         }
                         else if(Objects.equals(command, "file_req")){ // pck(fileReq, CLIENT_PORT, fileName1;fileName2;...)
                             String fileNames[] = table[2].split(";");
-                            System.out.println("Client " + fromIP_Port + " requested " + Arrays.toString(fileNames));
+                            System.out.println("(Server) Client " + fromIP_Port + " requested " + Arrays.toString(fileNames));
 
                             BroadcasterMediator bm = new BroadcasterMediator(from_inet, clientPort);
 
@@ -105,23 +87,13 @@ public class Server {
                              */
                             String query = table[2];
                             BroadcasterMediator bm = new BroadcasterMediator(from_inet, clientPort);
-
-                            String msgWithNodes = createRegexMessage(searchNodes(query));
-                            bm.lookupResp(query, msgWithNodes);
-                        } else if(Objects.equals(command, "state")) { // pck(lookup, CLIENT_PORT, file1)
-                            int idxNode = findIdxNode(fromIP_Port);
-                            BroadcasterMediator bm = new BroadcasterMediator(from_inet, clientPort);
-                            if(idxNode<0){ // not  shared anything yet
-                                bm.stateResp("notfound");
-                            } else {
-                                Node n = nodes.get(idxNode);
-                                bm.stateResp(n.filesToString());
-                            }
+                            //TODO
+                            //String msgWithNodes = createRegexMessage(searchNodes(query));
+                            //bm.lookupResp(query, msgWithNodes);
                         } else if(Objects.equals(command,"ping_resp")){  // pck(ping,)
                             crashHandler.receivedPing(new Node(socket.getInetAddress(), clientPort));
                         }
                         crashHandler.updateNodes();
-                        // crashHandler.setNodes(nodes); // updating list of nodes witout db
                     }
                 }
             }catch (IOException e) {
@@ -133,6 +105,7 @@ public class Server {
         serverThread.start();
     }
 
+    /*
     private HashMap searchNodes(String query) {
         HashMap<Node, ArrayList<String>> result = new HashMap<>();
 
@@ -143,6 +116,7 @@ public class Server {
 
         return result;
     }
+    */
 
     private String createRegexMessage(HashMap<Node, ArrayList<String>> results) {
         StringBuilder sb = new StringBuilder();
@@ -162,23 +136,6 @@ public class Server {
         return sb.toString();
     }
 
-
-    private Node nodeHasFile(String fileName){
-        for(Node n: nodes){
-            if(n.hasFile(fileName)) return n;
-        }
-        return null;
-    }
-
-    private ArrayList<Node> nodesHavingFile(String filename){
-        ArrayList<Node> returnNodes = new ArrayList<>();
-        for(Node n: nodes){
-            //System.out.println(n.search(pattern));
-            if(n.hasFile(filename)) returnNodes.add(n);
-        }
-        return returnNodes;
-    }
-
     private String createNodesMessage(String filename, ArrayList<Node> nodes){
         StringBuilder sb = new StringBuilder();
         for (Node n: nodes){
@@ -191,9 +148,9 @@ public class Server {
     /**
      * Prints all the registered nodes in the Server in a nice format (For debugging)
      */
-    public static synchronized void printNodes(){
+    public synchronized void printNodes(){
         System.out.println("v-------- nodes -----v");
-        nodes.forEach(System.out::println);
+        dbMediator.getAllNodes().forEach(System.out::println);
         System.out.println("^--------------------^");
     }
 }

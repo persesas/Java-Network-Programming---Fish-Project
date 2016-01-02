@@ -33,7 +33,7 @@ public class Broadcaster implements Runnable {
             PrintWriter out =new PrintWriter(socket.getOutputStream(), true);
 
             InetAddress addr = InetAddress.getByName(toIp);
-            System.out.println("msg sent at " + addr + " " + toPort + " : " + msg);
+            System.out.println("(Broadcaster) Msg sent at " + addr + " " + toPort + " : " + msg);
             out.println(msg);
             socket.close();
 

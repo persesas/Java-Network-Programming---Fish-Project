@@ -13,8 +13,8 @@ import java.util.Scanner;
 // TODO DONE (You are free to invent other messages, such as the server telling the client how many files are currently shared,)
 // TODO DONE (or how many clients are currently registered aka if the client wants to update the shared files(new local files etc).)
 // TODO DONE 6 = Handling A Client Crash
+// TODO DONE 4 = Use JDBC and a relational database for storing the server directory information.
 
-// TODO 4 = Use JDBC and a relational database for storing the server directory information.
 // TODO 7 = P2P
 
 /**
@@ -29,7 +29,7 @@ public class Client {
         String shared_file_path = "./";
         String server_address = "127.0.0.1";
         String server_port = "8000";
-        String[] commands = new String[] {"help", "share", "fileReq", "downloadReq", "upload_req", "state", "lookup", "exit"};
+        String[] commands = {"help", "share", "fileReq", "downloadReq", "upload_req", "lookup", "exit"};
 
         if(args.length == 1) {
             // Only client port is provided, listens on every IP, rest is default
@@ -45,7 +45,7 @@ public class Client {
             client_port = Integer.parseInt(args[3]);
         }
 
-        ClientServer cl = new ClientServer(client_port, shared_file_path);
+        new ClientServer(client_port, shared_file_path);    // start client server
 
         InetAddress serverAddress = null;
         int serverPort = -1;
@@ -88,9 +88,6 @@ public class Client {
                     files = getFilesFromDir(shared_file_path);
                     share(files, serverAddress, serverPort);
                     break;
-                case "state":       // query the server about our shared files, if they are up to date with the local
-                    getState(serverAddress, serverPort);
-                    break;
                 case "file_req":    // request from a client to the server for downloading a given file
                     if(sc.hasNext())
                         fileReq(sc.next(), serverAddress, serverPort);
@@ -100,7 +97,7 @@ public class Client {
                 case "download_req": // request from a client to another client to download a given file
                     downloadReq(file, path, serverAddress, serverPort);
                     break;
-                case "upload_req":  //
+                case "upload_req":  // uploads a file to a given client IP + port (for debugging)
                     uploadReq("myFiles.txt", path, clientIP, otherClientPort);
                     break;
                 case "help":    // command indicating to client what are the available commands
@@ -121,11 +118,6 @@ public class Client {
             }
 
         }while(!Objects.equals(userInput, "exit"));
-    }
-
-    private static void getState(InetAddress serverAdd, int serverPort) {
-        BroadcasterMediator bm = new BroadcasterMediator(serverAdd, serverPort);
-        bm.getState(client_port);
     }
 
     private static HashMap<String, String> getFilesFromDir(String path){

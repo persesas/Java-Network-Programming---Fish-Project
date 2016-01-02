@@ -12,7 +12,7 @@ public class ClientServer {
     /**
      * Creates the Server Side of the Client listening to a given port
      * @param port - Port listening to
-     * @param shared_file_path
+     * @param shared_file_path - the path of the shared files folder
      */
     public ClientServer(int port, String shared_file_path) {
         Runnable serverTask = () -> {

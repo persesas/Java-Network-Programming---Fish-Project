@@ -1,6 +1,7 @@
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -102,6 +103,15 @@ public class Node {
     @Override
     public String toString(){
         return "ip: " + ip_add.getHostAddress() + " port:" + port + " size shared:" + files.size();
+    }
+
+    @Override
+    public boolean equals(Object other){
+        if (other == null) return false;
+        if (other == this) return true;
+        if (!(other instanceof Node))return false;
+        Node otherNode = (Node)other;
+        return ip_add.equals(otherNode.getIp_add()) && port==otherNode.getPort();
     }
 
     public String filesToString() {

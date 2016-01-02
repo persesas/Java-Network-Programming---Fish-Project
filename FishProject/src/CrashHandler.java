@@ -11,12 +11,11 @@ public class CrashHandler {
     private final int TIME_BEFORE_PING = 10000;
     private final int TIME_BEFORE_TIMEOUT = 1000;
     private int serverPort;
-    private ArrayList<Node> nodes;
+    private ArrayList<Node> nodes = new ArrayList<>();
     private ArrayList<Node> confirmedNodes;
-    private DBMediator dbMediator;
+    private DBMediator dbMediator = new DBMediator();
 
-    public CrashHandler(ArrayList<Node> nodes, int serverPort){
-        this.nodes = nodes;
+    public CrashHandler(int serverPort){
         this.serverPort = serverPort;
         start();
         dbMediator = DBMediator.getInstance();
@@ -27,8 +26,10 @@ public class CrashHandler {
         TimerTask timerTaskPing = new TimerTask() {
             @Override
             public void run() {
+                nodes = dbMediator.getAllNodes();
                 confirmedNodes = new ArrayList<>();
                 System.out.println("(CrashHandler) ping all nodes (" + nodes.size()+ ")");
+                System.out.flush();
 
                 for(Node n: nodes){
                     BroadcasterMediator broadcasterMediator= new BroadcasterMediator(n.getIp_add(), n.getPort());
@@ -39,8 +40,22 @@ public class CrashHandler {
                 TimerTask timerTaskTimeout = new TimerTask() {
                     @Override
                     public void run() {
-                        nodes = confirmedNodes;
+                        ArrayList<Node> toBeRem = removeAll(nodes,confirmedNodes);
+                        for (Node n : toBeRem) {
+                            dbMediator.deleteNode(n.getIp_add().getHostAddress(), Integer.toString(n.getPort()));
+                        }
                     }
+
+                    private ArrayList<Node> removeAll(ArrayList<Node> nodes, ArrayList<Node> confirmed) {
+                        ArrayList<Node> ret = new ArrayList<>();
+                        for(Node n: nodes){
+                            if (!confirmed.contains(n)){
+                                ret.add(n);
+                            }
+                        }
+                        return ret;
+                    }
+
                 };
                 Timer timer = new Timer();
                 timer.schedule(timerTaskTimeout, TIME_BEFORE_TIMEOUT);
@@ -58,8 +73,4 @@ public class CrashHandler {
     }
 
     public void updateNodes(){ this.nodes = dbMediator.getAllNodes(); }
-    public void setNodes(ArrayList<Node> nodes){
-        this.nodes = nodes;
-    }
-
 }
