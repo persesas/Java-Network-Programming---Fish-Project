@@ -22,7 +22,6 @@ public class Server {
     public static void main(String[] args) {
         // int port = Integer.parseInt(args[0]);
         new Server(8000);
-        new DBMediator();
     }
 
 
@@ -35,6 +34,7 @@ public class Server {
         return -1;
     }
 
+
     /**
      * Creates a server listening to a given port
      * @param port - port listening to
@@ -43,7 +43,7 @@ public class Server {
         System.out.println("Server running and waiting for connections...");
 
         crashHandler = new CrashHandler(nodes, port); // start crash Handler
-        //dbMediator = new DBMediator();
+        dbMediator = DBMediator.getInstance();
 
         Runnable serverTask = () -> {
             try {
@@ -77,12 +77,14 @@ public class Server {
                                 String name = sharedFile.split("_")[0];
                                 String dest = sharedFile.split("_")[1];
                                 nodes.get(idxNode).addFile(name, dest);
+                                dbMediator.createNode(from_inet.getHostAddress(), Integer.toString(clientPort), name, dest);
                             }
                             printNodes();
                         }
                         else if(Objects.equals(command, "unshare")){  // pck(unshare, CLIENT_PORT)
                             System.out.println("Client unshared files " + fromIP_Port);
                             nodes.remove(findIdxNode(fromIP_Port));
+                            dbMediator.deleteNode(from_inet.getHostAddress(), Integer.toString(clientPort));
                             printNodes();
                         }
                         else if(Objects.equals(command, "file_req")){ // pck(fileReq, CLIENT_PORT, fileName1;fileName2;...)
@@ -92,7 +94,8 @@ public class Server {
                             BroadcasterMediator bm = new BroadcasterMediator(from_inet, clientPort);
 
                             for (String fileName : fileNames) {
-                                String msgWithNodes = createNodesMessage(fileName,nodesHavingFile(fileName));
+                                String msgWithNodes = createNodesMessage(fileName,dbMediator.getFile(fileName)); // with DB
+                                //String msgWithNodes = createNodesMessage(fileName,nodesHavingFile(fileName)); // without DB
                                 bm.file_req_resp(fileName, msgWithNodes);
                             }
 
@@ -117,7 +120,8 @@ public class Server {
                         } else if(Objects.equals(command,"ping_resp")){  // pck(ping,)
                             crashHandler.receivedPing(new Node(socket.getInetAddress(), clientPort));
                         }
-                        crashHandler.setNodes(nodes); // updating list of nodes
+                        crashHandler.updateNodes();
+                        // crashHandler.setNodes(nodes); // updating list of nodes witout db
                     }
                 }
             }catch (IOException e) {

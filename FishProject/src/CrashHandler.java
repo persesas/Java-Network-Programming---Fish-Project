@@ -13,11 +13,13 @@ public class CrashHandler {
     private int serverPort;
     private ArrayList<Node> nodes;
     private ArrayList<Node> confirmedNodes;
+    private DBMediator dbMediator;
 
     public CrashHandler(ArrayList<Node> nodes, int serverPort){
         this.nodes = nodes;
         this.serverPort = serverPort;
         start();
+        dbMediator = DBMediator.getInstance();
     }
 
 
@@ -55,6 +57,7 @@ public class CrashHandler {
         confirmedNodes.add(node);
     }
 
+    public void updateNodes(){ this.nodes = dbMediator.getAllNodes(); }
     public void setNodes(ArrayList<Node> nodes){
         this.nodes = nodes;
     }

@@ -18,6 +18,7 @@ public class DBMediator {
     private PreparedStatement deleteNodeStatement;
     private PreparedStatement getFileStatement;
     private PreparedStatement rmvFileFromNodeStatement;
+    private PreparedStatement getAllNodesStatement;
 
     /**
      * Constructor of the Database Mediator
@@ -43,7 +44,8 @@ public class DBMediator {
                     + "(ip VARCHAR(32) NOT NULL,"
                     + " port VARCHAR(32) NOT NULL,"
                     + " fileName VARCHAR(64) NOT NULL,"
-                    + " path VARCHAR(128) NOT NULL);");
+                    + " path VARCHAR(128) NOT NULL,"
+                    + " CONSTRAINT pk_ClientsID PRIMARY KEY (ip, port, fileName) );");
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -57,6 +59,7 @@ public class DBMediator {
         rmvFileFromNodeStatement = connection.prepareStatement("DELETE FROM clients WHERE fileName = ? AND ip = ? AND port=?");    // rmv a file from a given node
         allFilesStatement = connection.prepareStatement("SELECT DISTINCT fileName FROM clients");   // returns all files
         getFileStatement = connection.prepareStatement("SELECT * FROM clients where fileName=?");   // returns all files with a given fileName
+        getAllNodesStatement = connection.prepareStatement("SELECT DISTINCT ip, port FROM clients");
     }
 
     /**
@@ -92,6 +95,9 @@ public class DBMediator {
             } else {
                 throw new RejectedException("(DBMediator) Cannot create client :" + fileName);
             }
+        } catch (SQLIntegrityConstraintViolationException e){
+            System.err.println("(DBMediator) Node and file is already in database, ignoring request");
+            return false;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
@@ -173,6 +179,27 @@ public class DBMediator {
             while(rs.next()){
                 Node n = new Node(InetAddress.getByName(rs.getString("ip")), Integer.parseInt(rs.getString("port")));
                 n.addFile(rs.getString("fileName"), rs.getString("path"));
+                nodes.add(n);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+        return nodes;
+    }
+
+    /**
+     * Get all distinct nodes
+     * @return an ArrayList of unique nodes
+     */
+    public ArrayList<Node> getAllNodes(){
+        ArrayList<Node> nodes = new ArrayList<>();
+        try {
+            ResultSet rs = getAllNodesStatement.executeQuery();
+            while(rs.next()){
+                Node n = new Node(InetAddress.getByName(rs.getString("ip")), Integer.parseInt(rs.getString("port")));
                 nodes.add(n);
             }
         } catch (SQLException e) {
