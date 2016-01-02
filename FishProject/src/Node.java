@@ -86,7 +86,21 @@ public class Node {
      * Returns a list of file_dir that match the pattern
      * @param pattern - regex to search with
      */
-    public ArrayList<String> search(String pattern) {
+    public ArrayList<String> searchNoDB(String pattern) {
+        ArrayList<String> result = new ArrayList<>();
+        Pattern p = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
+        for(String file: files.keySet()) {
+            Matcher m = p.matcher(file);
+            if(m.find()) result.add(file + "_" + files.get(file));
+        }
+        return result;
+    }
+
+    /**
+     * Returns a list of file_dir that match the pattern from DB
+     * @param pattern - regex to search with
+     */
+    public ArrayList<String> searchFromDB(String pattern) {
         ArrayList<String> result = new ArrayList<>();
         Pattern p = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
         for(String file: files.keySet()) {

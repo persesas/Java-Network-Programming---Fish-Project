@@ -87,8 +87,7 @@ public class Server {
                              */
                             String query = table[2];
                             BroadcasterMediator bm = new BroadcasterMediator(from_inet, clientPort);
-                            //TODO
-                            //String msgWithNodes = createRegexMessage(searchNodes(query));
+                            //String msgWithNodes = createRegexMessage(dbMediator.searchFiles(query));
                             //bm.lookupResp(query, msgWithNodes);
                         } else if(Objects.equals(command,"ping_resp")){  // pck(ping,)
                             crashHandler.receivedPing(new Node(socket.getInetAddress(), clientPort));

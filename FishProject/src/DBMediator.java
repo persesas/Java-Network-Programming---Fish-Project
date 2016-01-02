@@ -19,6 +19,7 @@ public class DBMediator {
     private PreparedStatement getFileStatement;
     private PreparedStatement rmvFileFromNodeStatement;
     private PreparedStatement getAllNodesStatement;
+    private PreparedStatement searchFilesStatement;
 
     /**
      * Constructor of the Database Mediator
@@ -60,6 +61,7 @@ public class DBMediator {
         allFilesStatement = connection.prepareStatement("SELECT DISTINCT fileName FROM clients");   // returns all files
         getFileStatement = connection.prepareStatement("SELECT * FROM clients where fileName=?");   // returns all files with a given fileName
         getAllNodesStatement = connection.prepareStatement("SELECT DISTINCT ip, port FROM clients");
+        searchFilesStatement = connection.prepareStatement("SELECT * FROM clients WHERE fileName REGEXP ?");
     }
 
     /**
@@ -106,6 +108,34 @@ public class DBMediator {
             return false;
         }
     }
+
+    /**
+     * Given a regex return all the files that follow it
+     * @param query - regexp
+     */
+    /*public HashMap searchFiles(String query) {
+        HashMap<Node, ArrayList<String>> result = new HashMap<>();
+        try {
+            searchFilesStatement.setString(1, query);
+            ResultSet rs = searchFilesStatement.executeQuery();
+            while(rs.next()) {
+                Node n = new Node(InetAddress.getByName(rs.getString("ip")), Integer.parseInt(rs.getString("port")));
+
+                ArrayList<String> files = new ArrayList<>();
+                if(result.containsKey(n)) {
+                    // thelei hashcode to node gia thn anagnwrish
+                }
+                else {
+                    result.put(n, rs.getString("fileName") + "_" + rs.getString("path"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }*/
 
     /**
      * Deletes a Node from the Database
