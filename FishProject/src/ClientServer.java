@@ -30,28 +30,18 @@ public class ClientServer {
                         String command = table[0];
 
                         switch (command) {
-                            case "state_resp":
-                                if(table[1].equals("notfound"))
-                                    System.out.println("State: You haven\'t shared your files yet.");
-                                else {
-                                    System.out.println("Server state for your files: " + table[1]);
-                                }
-                                break;
-                            case "file_req_resp":  //pck(file_req_resp,fileName,ip1::port1::path1<->ip2::port2::path2<->...)
+                            case "file_req_resp":  //pck(file_req_resp,fileName,ip1::port1::path1)
                                 if (!table[2].equals("not found")) {
                                     String fileName = table[1];
-                                    String [] nodes = table[2].split("<->");
-                                    for(String s: nodes){
-                                        System.out.println("Node having file - ip: " + s.split("::")[0]+ " port: " + s.split("::")[1] + " path: "+ s.split("::")[2]);
-                                    }
-                                    String path = nodes[0].split("::")[2];
-                                    InetAddress ipOwner = InetAddress.getByName(nodes[0].split("::")[0].substring(1));
-                                    int portOwner = Integer.parseInt(nodes[0].split("::")[1]);
+                                    String node = table[2];
+                                    System.out.println("Node having file - ip: " + node.split("::")[0]+ " port: " + node.split("::")[1] + " path: "+ node.split("::")[2]);
+                                    String path = node.split("::")[2];
+                                    InetAddress ipOwner = InetAddress.getByName(node.split("::")[0].substring(1));
+                                    int portOwner = Integer.parseInt(node.split("::")[1]);
 
                                     BroadcasterMediator bm = new BroadcasterMediator(ipOwner, portOwner);
                                     bm.downloadReq(fileName, path, port);
                                 } else System.out.println("Warning: requested file not found");
-
                                 break;
 
                             case "download_req":  //pck(downloadReq,clientPort, file_path)
@@ -96,8 +86,7 @@ public class ClientServer {
                 e.printStackTrace();
             }
         };
-        Thread serverThread = new Thread(serverTask);
-        serverThread.start();
+        (new Thread(serverTask)).start();
     }
 
 

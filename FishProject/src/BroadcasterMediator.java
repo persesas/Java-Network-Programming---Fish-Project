@@ -12,7 +12,12 @@ public class BroadcasterMediator {
     private Broadcaster b;
 
     /**
-     * Creates the BroadcasterMediator and will send the message to the specified ip and port
+     * Constructor for UDP (known ip and port)
+     */
+    public BroadcasterMediator(){}
+
+    /**
+     * Creates the BroadcasterMediator and will send the message to the specified ip and port, for TCP communication
      * @param to_add - Msg to be sent to that ip
      * @param to_port - Msg to be sent to that port
      */
@@ -22,31 +27,33 @@ public class BroadcasterMediator {
     }
 
     /**
-     * Unregisters a Node from the Server
-     * @param clientPort - port of the sender
+     * Unregisters a Node from all clients listening in the multicast group, via UDP
      */
-    public void disconnect(int clientPort) {
-         b = new Broadcaster(to_add, to_port, "unshare," + clientPort);
-        (new Thread(b)).start();
+    public void disconnect(HashMap<String, String> fileNames) {
+        String msg = "shared_files,";
+        for(String fileName: fileNames.keySet()){
+            msg = msg.concat(fileName+"_"+fileNames.get(fileName)+";");
+        }
+        UDPBroadcaster udpB = new UDPBroadcaster("unshare," + msg);
+        (new Thread(udpB)).start();
     }
 
     /**
-     * Registers a Node to the Server
+     * Registers a Node to all other clients listening in the multicast group, via UDP
      * @param fileNames - List of all files the node is sharing
-     * @param clientPort - port of the sender
      */
-    public void share(HashMap<String, String> fileNames, int clientPort){
-        String msg = "shared_files," + clientPort + ",";
+    public void share(HashMap<String, String> fileNames){
+        String msg = "shared_files,";
         for(String fileName: fileNames.keySet()){
             msg = msg.concat(fileName+"_"+fileNames.get(fileName)+";");
         }
 
-        b = new Broadcaster(to_add, to_port, msg);
-        (new Thread(b)).start();
+        UDPBroadcaster udpB = new UDPBroadcaster(msg);
+        (new Thread(udpB)).start();
     }
 
     /**
-     * Requests a file from the Server
+     * Requests a file from another client, via TCP
      * @param fileName - filename requested
      * @param clientPort - port of the sender
      */
@@ -59,22 +66,7 @@ public class BroadcasterMediator {
     }
 
     /**
-     * Response of the Server to a File request
-     * @param fileName - Name of the file
-     * @param msg - All nodes containing the fileName
-     */
-    public void file_req_resp(String fileName, String msg){
-        if(!msg.equals("")){
-            String msgToSent = "file_req_resp," + fileName + "," + msg;
-            b = new Broadcaster(to_add, to_port, msgToSent);
-        } else{
-            b = new Broadcaster(to_add, to_port, "file_req_resp," + fileName + ",not found");
-        }
-        (new Thread(b)).start();
-    }
-
-    /**
-     * Download request made by a Node to another Node
+     * Download request made by a Node to another Node, via TCP
      * @param fileName - Name of the file requested for download
      * @param path - Location where the file is stored on HD
      * @param clientPort - port of the sender
@@ -86,17 +78,17 @@ public class BroadcasterMediator {
     }
 
     /**
-     * Sends a file
+     * Sends a file from a client to another client, via TCP
      * @param fileName - name of the file to be sent
      * @param path - path of the file to be sent
      */
-    public void uploadFile(String fileName, String path){//TODO
+    public void uploadFile(String fileName, String path){
         FileBroadcaster fB = new FileBroadcaster(path, fileName, to_add, to_port);
         (new Thread(fB)).start();
     }
 
     /**
-     * Sends a lookup request
+     * Sends a lookup request, via TCP
      * @param fileName - name of the file
      * @param clientPort - port of the sending client
      */
@@ -106,7 +98,7 @@ public class BroadcasterMediator {
     }
 
     /**
-     * Sends the reply of a lookup request
+     * Sends the reply of a lookup request, via TCP
      * @param fileName - name of the file
      * @param msgWithNodes - String containing all nodes containing the file
      */
@@ -116,31 +108,36 @@ public class BroadcasterMediator {
         (new Thread(b)).start();
     }
 
-    public void getState(int clientPort) {
-        b = new Broadcaster(to_add, to_port, "state,"+ clientPort);
-        (new Thread(b)).start();
-    }
-
-    public void stateResp(String msgWithNodes) {
-        b = new Broadcaster(to_add, to_port, "state_resp,"+ msgWithNodes);
-        (new Thread(b)).start();
-    }
 
     /**
-     * Ping from server to server
-     * @param serverPort - port of the server
+     * Ping from client to another client, via TCP
+     * @param clientPort - port of the server
      */
-    public void ping(int serverPort){
-        b = new Broadcaster(to_add, to_port, "ping," + serverPort);
+    public void ping(int clientPort){
+        b = new Broadcaster(to_add, to_port, "ping," + clientPort);
         (new Thread(b)).start();
     }
 
     /**
-     * Ping response from client to server
+     * Ping response from client to another client, via TCP
      * @param clientPort - port of client
      */
     public void pingResp(int clientPort){
         b = new Broadcaster(to_add, to_port, "ping_resp," + clientPort);
         (new Thread(b)).start();
+    }
+
+    /**
+     * Using UDBPBroadcaster, searching file via UDP
+     * @param fileName - fileName requested
+     */
+    public void discovery(String fileName, int clientPort){
+        UDPBroadcaster udpB = new UDPBroadcaster("discovery," + clientPort + "," +fileName);
+        (new Thread(udpB)).start();
+    }
+
+    public void discoveryResp(String fileName, int clientPort){
+        UDPBroadcaster udpB = new UDPBroadcaster("discovery," + clientPort + "," +fileName);
+        (new Thread(udpB)).start();
     }
 }
