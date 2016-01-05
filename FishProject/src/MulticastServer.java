@@ -30,7 +30,6 @@ public class MulticastServer {
                         String [] table = received.split(",");
                         String command = table[0];
                         String fromIP = packet.getAddress().getHostAddress();
-                        UDPBroadcaster.setSend(false);
 
                         System.out.println("(MulticastServer) received " + received);
                         if(Objects.equals(command,"discovery")){ //pcK(discovery,)
@@ -43,6 +42,7 @@ public class MulticastServer {
                             else System.out.println(fileName + " not found");
                         }
                     }
+                    UDPBroadcaster.setSend(false);
                 }
             }
             catch (IOException e) {
