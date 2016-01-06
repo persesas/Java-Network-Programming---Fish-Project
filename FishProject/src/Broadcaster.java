@@ -2,8 +2,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.*;
+import java.util.Random;
 
 /**
+ * Represents a TCP broadcaster
  * @author Perséas Charoud-Got
  * @author Fanti Samisti
  */
@@ -29,6 +31,15 @@ public class Broadcaster implements Runnable {
     @Override
     public void run() {
         try {
+            if(msg.contains("discovery_resp")){
+                Random r = new Random();
+                int d = r.nextInt(1000);
+                try {
+                    Thread.sleep(d);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
             Socket socket = new Socket(toIp, toPort);
             PrintWriter out =new PrintWriter(socket.getOutputStream(), true);
 

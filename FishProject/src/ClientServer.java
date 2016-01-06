@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.*;
+import java.util.HashMap;
 
 /**
  * Represents the Server side of the Client
@@ -8,13 +9,12 @@ import java.net.*;
  **/
 public class ClientServer {
 
-
     /**
      * Creates the Server Side of the Client listening to a given port
      * @param port - Port listening to
-     * @param shared_file_path - the path of the shared files folder
+     * @param sharedFiles - All shared files from the client
      */
-    public ClientServer(int port, String shared_file_path) {
+    public ClientServer(int port, HashMap<String, String> sharedFiles) {
         Runnable serverTask = () -> {
 
             try {
@@ -30,53 +30,38 @@ public class ClientServer {
                         String command = table[0];
 
                         switch (command) {
-                            case "file_req_resp":  //pck(file_req_resp,fileName,ip1::port1::path1)
-                                if (!table[2].equals("not found")) {
-                                    String fileName = table[1];
-                                    String node = table[2];
-                                    System.out.println("Node having file - ip: " + node.split("::")[0]+ " port: " + node.split("::")[1] + " path: "+ node.split("::")[2]);
-                                    String path = node.split("::")[2];
-                                    InetAddress ipOwner = InetAddress.getByName(node.split("::")[0].substring(1));
-                                    int portOwner = Integer.parseInt(node.split("::")[1]);
-
-                                    BroadcasterMediator bm = new BroadcasterMediator(ipOwner, portOwner);
-                                    bm.downloadReq(fileName, path, port);
-                                } else System.out.println("Warning: requested file not found");
-                                break;
-
                             case "download_req":  //pck(downloadReq,clientPort, file_path)
                                 int portDestination = Integer.parseInt(table[1]);
-                                String fileName = table[2].split("_")[0];
-                                String path = table[2].split("_")[1];
-                                // Check if the path is aa legitimate one
-                                if(!path.startsWith(shared_file_path)) {
-                                    System.err.println("Illegal path: " + path);
-                                    break;
-                                }
+                                String fileName = table[2].split("____")[0];
+                                String path = table[2].split("____")[1];
 
                                 BroadcasterMediator bm = new BroadcasterMediator(socket.getInetAddress(), portDestination);
                                 bm.uploadFile(fileName, path);
                                 break;
-
                             case "file_data":  //pck(file_data,fileName)
                                 String name = table[1];
                                 createFile(name, reader);
                                 break;
-                            case "lookup_resp": //pck(lookup_resp,fileName_path,found/notFound, ip1::port1::path1<->ip2::port2::path2)
-                                String nameFile = table[1];
-                                if(table[2].equals("file not found")) System.out.println(nameFile + " not found");
+                            case "lookup": //pck(lookup,clientPort,filename")
+                                String fileNameReq = table[2];
+                                BroadcasterMediator bM = new BroadcasterMediator(socket.getInetAddress(), Integer.parseInt(table[1]));
+                                if(sharedFiles.containsKey(fileNameReq)){
+                                    bM.lookupResp(port, fileNameReq, sharedFiles.get(fileNameReq));
+                                } else{
+                                    bM.lookupResp(port, fileNameReq, "");
+                                }
+
+                            case "lookup_resp": //pck(lookup_resp,clientPort,fileName,found,path)
+                                String nameFile = table[2];
+                                if(table[3].equals("file not found")) System.out.println("(ClientServer)" + socket.getInetAddress() + ":" + table[1] + " doesn't have " + nameFile);
                                 else {
-                                    String [] nodes = table[3].split("<->");
-                                    for(String s: nodes){
-                                        System.out.println("Found at - ip: " + s.split("::")[0]+ " port: " + s.split("::")[1]
-                                                + " name: "+ s.split("::")[2] + " path: " + s.split("::")[3]);
-                                    }
+                                    System.out.println("(ClientServer) Found " + table[2] +  " at " + socket.getInetAddress() + ":" + table[1]
+                                            + " path: " + table[4]);
+
                                 }
                                 break;
-                            case "ping":
-                                int p = Integer.parseInt(table[1]);
-                                BroadcasterMediator bM = new BroadcasterMediator(socket.getInetAddress(), p);
-                                bM.pingResp(port);
+                            case "discovery_resp":  //pck(discovery_resp,port,fileName)
+                                System.out.println("(ClientServer) ip: " + socket.getInetAddress() + ":" + table[1] + " got file " + table[2] + " @ " + table[3]);
                         }
                     }
 
@@ -90,7 +75,7 @@ public class ClientServer {
     }
 
 
-    //Creates a file from a given reader
+    //Creates a file from a given BufferedReader
     private void createFile(String name, BufferedReader reader) throws IOException {
         String line;
         PrintWriter writer = new PrintWriter(name, "UTF-8");

@@ -1,6 +1,5 @@
 import java.io.File;
 import java.net.InetAddress;
-import java.net.InterfaceAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -14,8 +13,8 @@ import java.util.Scanner;
  */
 public class Client {
     private static int client_port = 8000;
-    public final static String IP_MULTICAST = "239.0.0.1";
-    public final static int MULTICAST_PORT = 9001;
+    private static String ip_multicast = "239.0.0.1";
+    private static int port_multicast = 9001;
 
     public static void main(String[] args) {
         String shared_file_path = "./";
@@ -27,26 +26,24 @@ public class Client {
         }
         else if(args.length > 4){
             throw new IllegalArgumentException("The arguments format should be:" +
-                    " \"Client [shared_file_path] [server_address] [server_port] [client_port]\"");
+                    " \"Client [shared_file_path][ip_multicast] [port_multicast] [client_port] \"");
         } else if(args.length == 4){
             shared_file_path = args[0];
             client_port = Integer.parseInt(args[3]);
+            ip_multicast = args[1];
+            port_multicast = Integer.parseInt(args[2]);
         }
 
-        new ClientServer(client_port, shared_file_path);    // start client server
-        new MulticastServer(getFilesFromDir(shared_file_path));  // start multicast server
+        new ClientServer(client_port, getFilesFromDir(shared_file_path));    // start client server
+        new MulticastServer(ip_multicast, port_multicast, client_port, getFilesFromDir(shared_file_path));  // start multicast server
 
         // Print the files that the client is about to share
-        System.out.println("______");
+        System.out.println("___ Is sharing ___");
         HashMap<String, String> files = getFilesFromDir(shared_file_path);
         for(String fileName: files.keySet()){
             System.out.println(fileName + " - " + files.get(fileName));
         }
-        System.out.println("______");
-
-        String file = "cl2-file2";
-        String path = "./data2";
-        int otherClientPort = 9002;
+        System.out.println("___ Is sharing ___");
 
         InetAddress clientIP = null;
         try {
@@ -62,51 +59,78 @@ public class Client {
             userInput = sc.next();
 
             switch(userInput){
-                case "share":       // client registers to the server indicating what files he's sharing
-                    // TODO update the state
-                    files = getFilesFromDir(shared_file_path);
-                    share(files);
-                    break;
-                case "file_req":    // request from a client to the server for downloading a given file
-                    if(sc.hasNext())
-                        fileReq(sc.next(), sc.next(), sc.next());
-                    else
-                        System.out.println("WARNING: fileReq needs file(s) as arguments");
-                    break;
                 case "download_req": // request from a client to another client to download a given file
-                    downloadReq(file, path);
-                    break;
-                case "upload_req":  // uploads a file to a given client IP + port (for debugging)
-                    uploadReq("myFiles.txt", path, clientIP, otherClientPort);
+                    String ip = null;
+                    String port;
+                    try {
+                        if(sc.hasNext()) {
+                            ip = sc.next();
+                            if (sc.hasNext()){
+                                port = sc.next();
+                                if(sc.hasNext()){
+                                    String filename = sc.next();
+                                    if(sc.hasNext()){
+                                        String path = sc.next();
+                                        downloadReq(InetAddress.getByName(ip), Integer.parseInt(port), filename, path);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    } catch (UnknownHostException e) {
+                        System.out.println("The address (" + ip + ") introduced doesn't exist");
+                    } catch (NumberFormatException e){
+                        System.out.println("The port must be an number");
+                    }
+                    System.out.println("WARNING: download_req uses the following format: download_req ip port filename path");
                     break;
                 case "help":    // command indicating to client what are the available commands
                     System.out.print("Available commands:");
                     System.out.println(Arrays.toString(commands));
                     break;
-                case "exit":    // disconnects client from server
-                    files = getFilesFromDir(shared_file_path);
-                    unshare(files);
+                case "lookup":  // request from client to server asking if a particular file is available   //TODO
+                    String ipAddNode = null;
+                    String portNode;
+                    try {
+                        if (sc.hasNext()) {
+                            ipAddNode = sc.next();
+                            if (sc.hasNext()) {
+                                portNode = sc.next();
+                                if (sc.hasNext()) {
+                                    String filename = sc.next();
+                                    lookup(InetAddress.getByName(ipAddNode), Integer.parseInt(portNode), filename);
+                                    break;
+                                }
+                            }
+                        }
+                    } catch (UnknownHostException e) {
+                        System.out.println("The address (" + ipAddNode + ") introduced doesn't exist");
+                    } catch (NumberFormatException e) {
+                        System.out.println("The port must be an number");
+                    }
+                    System.out.println("WARNING: download_req uses the following format: lookup ip port filename");
                     break;
-                case "lookup":  // request from client to server asking if a particular file is available
+                case "discovery":
                     if(sc.hasNext())
-                        lookup(sc.next());
+                        try {
+                            discovery(InetAddress.getByName(ip_multicast), port_multicast, sc.next());
+                        } catch (UnknownHostException e) {
+                            e.printStackTrace();
+                        }
                     else
                         System.out.println("WARNING: lookup needs file as argument");
                     break;
-                case "discovery":
-                    //TODO
-                    discovery(sc.next());
-                    break;
                 default:
-                    System.err.println("unknown command, please retry");
+                    System.out.println("unknown command, please retry");
             }
 
         }while(!Objects.equals(userInput, "exit"));
     }
 
+    //Gets all files from a given directory
     private static HashMap<String, String> getFilesFromDir(String path){
         HashMap<String, String> files = new HashMap<>();
-        final File folder = new File(path);
+        File folder = new File(path);
         for (final File fileEntry : folder.listFiles()) {
             if (fileEntry.isDirectory()) {
                 files.putAll(getFilesFromDir(fileEntry.getPath()));
@@ -117,43 +141,18 @@ public class Client {
         return files;
     }
 
-    private static void share(HashMap<String, String> fileNames){
-        BroadcasterMediator bm = new BroadcasterMediator();
-        bm.share(fileNames);
-    }
-
-    private static void fileReq(String fileName, String to_add, String to_port){
-        BroadcasterMediator bm;
-        try {
-            bm = new BroadcasterMediator(InetAddress.getByName(to_add), Integer.parseInt(to_port));
-            bm.fileReq(fileName, client_port);
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static void unshare(HashMap<String, String> fileNames){
-        BroadcasterMediator bm = new BroadcasterMediator();
-        bm.disconnect(fileNames);
-    }
-
-    private static void downloadReq(String fileName, String path){
-        BroadcasterMediator bm = new BroadcasterMediator();
+    private static void downloadReq(InetAddress toAdd, int port, String fileName, String path){
+        BroadcasterMediator bm = new BroadcasterMediator(toAdd, port);
         bm.downloadReq(fileName,path,client_port);
     }
 
-    private static void uploadReq(String fileName, String path, InetAddress addDestination, int portDestination){
-        BroadcasterMediator bm = new BroadcasterMediator(addDestination, portDestination);
-        bm.uploadFile(fileName,path);
-    }
-
-    private static void lookup(String fileName){
-        BroadcasterMediator bm = new BroadcasterMediator();
+    private static void lookup(InetAddress toAdd, int port, String fileName){
+        BroadcasterMediator bm = new BroadcasterMediator(toAdd, port);
         bm.lookup(fileName,client_port);
     }
 
-    private static void discovery(String fileName){
-        BroadcasterMediator bm = new BroadcasterMediator();
+    private static void discovery(InetAddress toAdd, int port, String fileName){
+        BroadcasterMediator bm = new BroadcasterMediator(toAdd, port);
         bm.discovery(fileName, client_port);
     }
 }
