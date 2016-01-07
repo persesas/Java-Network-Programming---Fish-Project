@@ -61,7 +61,7 @@ public class DBMediator {
         allFilesStatement = connection.prepareStatement("SELECT DISTINCT fileName FROM clients");   // returns all files
         getFileStatement = connection.prepareStatement("SELECT * FROM clients where fileName=?");   // returns all files with a given fileName
         getAllNodesStatement = connection.prepareStatement("SELECT DISTINCT ip, port FROM clients");
-        searchFilesStatement = connection.prepareStatement("SELECT * FROM clients WHERE fileName REGEXP ?");
+        searchFilesStatement = connection.prepareStatement("SELECT * FROM clients WHERE fileName REGEXP= \" ? \" ");
     }
 
     /**
@@ -113,29 +113,30 @@ public class DBMediator {
      * Given a regex return all the files that follow it
      * @param query - regexp
      */
-    /*public HashMap searchFiles(String query) {
-        HashMap<Node, ArrayList<String>> result = new HashMap<>();
+    public ArrayList<String> searchFiles(String query) {
+        ArrayList<String> result = new ArrayList<>();
         try {
             searchFilesStatement.setString(1, query);
             ResultSet rs = searchFilesStatement.executeQuery();
-            while(rs.next()) {
-                Node n = new Node(InetAddress.getByName(rs.getString("ip")), Integer.parseInt(rs.getString("port")));
 
-                ArrayList<String> files = new ArrayList<>();
-                if(result.containsKey(n)) {
-                    // thelei hashcode to node gia thn anagnwrish
-                }
-                else {
-                    result.put(n, rs.getString("fileName") + "_" + rs.getString("path"));
-                }
+            while(rs.next()) {
+                StringBuilder sb = new StringBuilder();
+
+                sb.append(rs.getString("ip"))
+                        .append("::")
+                        .append(rs.getString("port"))
+                        .append("::")
+                        .append(rs.getString("fileName"))
+                        .append("::")
+                        .append(rs.getString("path"))
+                        .append("<->");
+
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
         }
         return result;
-    }*/
+    }
 
     /**
      * Deletes a Node from the Database

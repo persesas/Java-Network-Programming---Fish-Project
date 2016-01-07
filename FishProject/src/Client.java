@@ -114,7 +114,7 @@ public class Client {
                         System.out.println("WARNING: lookup needs file as argument");
                     break;
                 default:
-                    System.err.println("unknown command, please retry");
+                    System.out.println("unknown command, please retry");
             }
 
         }while(!Objects.equals(userInput, "exit"));
