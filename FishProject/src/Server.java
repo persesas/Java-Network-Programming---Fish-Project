@@ -73,18 +73,8 @@ public class Server {
 
     private String createRegexMessage(ArrayList<String> results) {
         StringBuilder sb = new StringBuilder();
-        for (Node n: results.keySet()){
-            for(String filename: results.get(n)) {
-                String[] data = filename.split("_");
-                sb.append(n.getIp_add())
-                        .append("::")
-                        .append(n.getPort())
-                        .append("::")
-                        .append(data[0])
-                        .append("::")
-                        .append(data[1])
-                        .append("<->");
-            }
+        for(String s: results){
+            sb.append(s);
         }
         return sb.toString();
     }

@@ -61,7 +61,7 @@ public class DBMediator {
         allFilesStatement = connection.prepareStatement("SELECT DISTINCT fileName FROM clients");   // returns all files
         getFileStatement = connection.prepareStatement("SELECT * FROM clients where fileName=?");   // returns all files with a given fileName
         getAllNodesStatement = connection.prepareStatement("SELECT DISTINCT ip, port FROM clients");
-        searchFilesStatement = connection.prepareStatement("SELECT * FROM clients WHERE fileName REGEXP= \" ? \" ");
+        searchFilesStatement = connection.prepareStatement("SELECT * FROM clients WHERE fileName REGEXP \"?\"");
     }
 
     /**
@@ -116,21 +116,23 @@ public class DBMediator {
     public ArrayList<String> searchFiles(String query) {
         ArrayList<String> result = new ArrayList<>();
         try {
-            searchFilesStatement.setString(1, query);
-            ResultSet rs = searchFilesStatement.executeQuery();
+            //searchFilesStatement.setString(1, query);
+            //ResultSet rs = searchFilesStatement.executeQuery();
+
+            Statement statement = connection.createStatement();
+            ResultSet rs = statement.executeQuery("SELECT * FROM clients WHERE fileName REGEXP \"" + query + "\"" );
 
             while(rs.next()) {
-                StringBuilder sb = new StringBuilder();
+                String sb = rs.getString("ip") +
+                        "::" +
+                        rs.getString("port") +
+                        "::" +
+                        rs.getString("fileName") +
+                        "::" +
+                        rs.getString("path") +
+                        "<->";
 
-                sb.append(rs.getString("ip"))
-                        .append("::")
-                        .append(rs.getString("port"))
-                        .append("::")
-                        .append(rs.getString("fileName"))
-                        .append("::")
-                        .append(rs.getString("path"))
-                        .append("<->");
-
+                result.add(sb);
             }
         } catch (SQLException e) {
             e.printStackTrace();
