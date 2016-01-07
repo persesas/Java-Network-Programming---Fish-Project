@@ -72,6 +72,10 @@ public class Client {
             userInput = sc.next();
 
             switch(userInput){
+                case "share":       // client registers to the server indicating what files he's sharing
+                    files = getFilesFromDir(shared_file_path);
+                    share(files, serverAddress, serverPort);
+                    break;
                 case "file_req":    // request from a client to the server for downloading a given file
                     if(sc.hasNext())
                         fileReq(sc.next(), serverAddress, serverPort);
@@ -115,6 +119,11 @@ public class Client {
             }
         }
         return files;
+    }
+
+    private static void share(HashMap<String, String> fileNames, InetAddress serverAdd, int serverPort){
+        BroadcasterMediator bm = new BroadcasterMediator(serverAdd, serverPort);
+        bm.share(fileNames, client_port);
     }
 
     private static void fileReq(String fileName, InetAddress serverAdd, int serverPort){
