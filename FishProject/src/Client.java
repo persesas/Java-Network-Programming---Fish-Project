@@ -6,17 +6,6 @@ import java.util.HashMap;
 import java.util.Objects;
 import java.util.Scanner;
 
-// TODO DONE (Consider sharing files located in subdirectories of shared_file_path, MUST BE UNIQUE NAME)
-// TODO DONE (Main security issue related to the way the server part of your client locates a file it has to send.)
-// TODO DONE (Your client should allow to retrieve only the files located in the 'shared file' directory and optionally its sub-directories.)
-// TODO DONE (Consider using pattern matching with regular expressions to lookup the server's directory)
-// TODO DONE (You are free to invent other messages, such as the server telling the client how many files are currently shared,)
-// TODO DONE (or how many clients are currently registered aka if the client wants to update the shared files(new local files etc).)
-// TODO DONE 6 = Handling A Client Crash
-// TODO DONE 4 = Use JDBC and a relational database for storing the server directory information.
-
-// TODO 7 = P2P
-
 /**
  * Represents the Client
  * @author Perséas Charoud-Got
@@ -58,12 +47,12 @@ public class Client {
         }
 
         // Print the files that the client is about to share
-        System.out.println(".....");
+        System.out.println("__ is sharing __");
         HashMap<String, String> files = getFilesFromDir(shared_file_path);
         for(String fileName: files.keySet()){
             System.out.println(fileName + " - " + files.get(fileName));
         }
-        System.out.println(".....");
+        System.out.println("__ is sharing __");
 
         String file = "cl2-file2";
         String path = "./data2";
@@ -83,11 +72,6 @@ public class Client {
             userInput = sc.next();
 
             switch(userInput){
-                case "share":       // client registers to the server indicating what files he's sharing
-                    // TODO update the state
-                    files = getFilesFromDir(shared_file_path);
-                    share(files, serverAddress, serverPort);
-                    break;
                 case "file_req":    // request from a client to the server for downloading a given file
                     if(sc.hasNext())
                         fileReq(sc.next(), serverAddress, serverPort);
@@ -131,11 +115,6 @@ public class Client {
             }
         }
         return files;
-    }
-
-    private static void share(HashMap<String, String> fileNames, InetAddress serverAdd, int serverPort){
-        BroadcasterMediator bm = new BroadcasterMediator(serverAdd, serverPort);
-        bm.share(fileNames, client_port);
     }
 
     private static void fileReq(String fileName, InetAddress serverAdd, int serverPort){

@@ -1,9 +1,5 @@
 import java.net.InetAddress;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Represent a Node, ie. someone sharing or downloading a file
@@ -54,15 +50,6 @@ public class Node {
         files.put(fileName, path);
     }
 
-    /**
-     * Removes the corresponding file name
-     * @param fileName - file name to be removed
-     */
-    public void removeFile(String fileName){
-        if(!files.containsKey(fileName)) System.err.println("File doesn't exists");
-        files.remove(fileName);
-    }
-
 
     /**
      * Returns the path from a given file
@@ -71,43 +58,6 @@ public class Node {
      */
     public String getPath(String fileName){
         return files.get(fileName);
-    }
-
-    /**
-     * Returns if a file is shared or not.
-     * @param filename - file name to be searched for
-     */
-    public boolean hasFile(String filename){
-        //System.out.println(filename.matches("\\d+"));
-        return files.containsKey(filename);
-    }
-
-    /**
-     * Returns a list of file_dir that match the pattern
-     * @param pattern - regex to search with
-     */
-    public ArrayList<String> searchNoDB(String pattern) {
-        ArrayList<String> result = new ArrayList<>();
-        Pattern p = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
-        for(String file: files.keySet()) {
-            Matcher m = p.matcher(file);
-            if(m.find()) result.add(file + "_" + files.get(file));
-        }
-        return result;
-    }
-
-    /**
-     * Returns a list of file_dir that match the pattern from DB
-     * @param pattern - regex to search with
-     */
-    public ArrayList<String> searchFromDB(String pattern) {
-        ArrayList<String> result = new ArrayList<>();
-        Pattern p = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
-        for(String file: files.keySet()) {
-            Matcher m = p.matcher(file);
-            if(m.find()) result.add(file + "_" + files.get(file));
-        }
-        return result;
     }
 
     /**
@@ -126,15 +76,5 @@ public class Node {
         if (!(other instanceof Node))return false;
         Node otherNode = (Node)other;
         return ip_add.equals(otherNode.getIp_add()) && port==otherNode.getPort();
-    }
-
-    public String filesToString() {
-        StringBuffer sb = new StringBuffer();
-        for(String filename: files.keySet()) {
-            sb.append(filename + "_" + files.get(filename));
-            sb.append(";");
-        }
-
-        return sb.toString();
     }
 }

@@ -58,19 +58,7 @@ public class Server {
         new Thread(serverTask).start();
     }
 
-    /*
-    private HashMap searchNodes(String query) {
-        HashMap<Node, ArrayList<String>> result = new HashMap<>();
-
-        for(Node n : nodes) {
-            ArrayList<String> matches = n.search(query);
-            if(matches.size() != 0) result.put(n, matches);
-        }
-
-        return result;
-    }
-    */
-
+    // create a regex message from a list of results
     private String createRegexMessage(ArrayList<String> results) {
         StringBuilder sb = new StringBuilder();
         for(String s: results){
@@ -79,6 +67,7 @@ public class Server {
         return sb.toString();
     }
 
+    // Creates a message containing all the nodes and files/paths having the requested filename;
     private String createNodesMessage(String filename, ArrayList<Node> nodes){
         StringBuilder sb = new StringBuilder();
         for (Node n: nodes){
@@ -87,20 +76,18 @@ public class Server {
         return sb.toString();
     }
 
-
     /**
-     * Prints all the registered nodes in the Server in a nice format (For debugging)
+     * A runnable ServerTask
      */
-    public synchronized void printNodes(){
-        System.out.println("v-------- nodes -----v");
-        dbMediator.getAllNodes().forEach(System.out::println);
-        System.out.println("^--------------------^");
-    }
-
     private class ServerTask implements Runnable {
         private BufferedReader reader;
         private Socket socket;
 
+        /**
+         * Constructor
+         * @param reader - BufferedReader from the socket
+         * @param socket - Socket connected to client
+         */
         public ServerTask(BufferedReader reader, Socket socket) {
             this.reader = reader;
             this.socket = socket;
@@ -130,11 +117,9 @@ public class Server {
                             String dest = sharedFile.split("_")[1];
                             dbMediator.createNode(from_inet.getHostAddress(), Integer.toString(clientPort), name, dest);
                         }
-                        //printNodes();
                     } else if (Objects.equals(command, "unshare")) {  // pck(unshare, CLIENT_PORT)
                         System.out.println("(Server) Client unshared files " + fromIP_Port);
                         dbMediator.deleteNode(from_inet.getHostAddress(), Integer.toString(clientPort));
-                        //printNodes();
                     } else if (Objects.equals(command, "file_req")) { // pck(fileReq, CLIENT_PORT, fileName1;fileName2;...)
                         String fileNames[] = table[2].split(";");
                         System.out.println("(Server) Client " + fromIP_Port + " requested " + Arrays.toString(fileNames));
@@ -143,11 +128,10 @@ public class Server {
 
                         for (String fileName : fileNames) {
                             String msgWithNodes = createNodesMessage(fileName, dbMediator.getFile(fileName)); // with DB
-                            //String msgWithNodes = createNodesMessage(fileName,nodesHavingFile(fileName)); // without DB
                             bm.file_req_resp(fileName, msgWithNodes);
                         }
 
-                    } else if (Objects.equals(command, "lookup")) { // pck(lookup, CLIENT_PORT, file1)
+                    } else if (Objects.equals(command, "lookup")) { // pck(lookup, CLIENT_PORT, regex)
                                 /*
                                     reply: node1:file1,file2;node2:file3,file4
                                  */

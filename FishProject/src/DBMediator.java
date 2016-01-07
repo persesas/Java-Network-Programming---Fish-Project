@@ -17,7 +17,6 @@ public class DBMediator {
     private PreparedStatement allFilesStatement;
     private PreparedStatement deleteNodeStatement;
     private PreparedStatement getFileStatement;
-    private PreparedStatement rmvFileFromNodeStatement;
     private PreparedStatement getAllNodesStatement;
     private PreparedStatement searchFilesStatement;
 
@@ -57,7 +56,6 @@ public class DBMediator {
     private void prepareStatements() throws SQLException {
         newNodeStatement = connection.prepareStatement("INSERT INTO clients VALUES(?, ?, ?, ?)");  // adds a new node
         deleteNodeStatement = connection.prepareStatement("DELETE FROM clients WHERE ip=? AND port=?");    // deletes a node
-        rmvFileFromNodeStatement = connection.prepareStatement("DELETE FROM clients WHERE fileName = ? AND ip = ? AND port=?");    // rmv a file from a given node
         allFilesStatement = connection.prepareStatement("SELECT DISTINCT fileName FROM clients");   // returns all files
         getFileStatement = connection.prepareStatement("SELECT * FROM clients where fileName=?");   // returns all files with a given fileName
         getAllNodesStatement = connection.prepareStatement("SELECT DISTINCT ip, port FROM clients");
@@ -154,25 +152,6 @@ public class DBMediator {
             System.out.println("(DBMediator) Deleted " + ip + " " + port);
 
         } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Removes a file from a Node
-     * @param ip - ip of Node
-     * @param port - port of Node
-     * @param fileName - fileName to be deleted from Node
-     */
-    public void rmvFileFromNode(String ip, String port, String fileName) {
-        try {
-            rmvFileFromNodeStatement.setString(1, ip);
-            rmvFileFromNodeStatement.setString(2, port);
-            rmvFileFromNodeStatement.setString(3, fileName);
-            int rows = rmvFileFromNodeStatement.executeUpdate();
-            if (rows == 1) System.out.println("(DBMediator) Deleted file" + fileName + " from " + ip + " " + port);
-            else throw new RejectedException("(DBMediator) Failed to delete file " + fileName + " from " + ip + " " + port);
-        } catch (SQLException | RejectedException e) {
             e.printStackTrace();
         }
     }

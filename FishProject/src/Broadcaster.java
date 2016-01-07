@@ -1,15 +1,15 @@
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.net.*;
+import java.net.ConnectException;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
 
 /**
  * @author Perséas Charoud-Got
  * @author Fanti Samisti
  */
 public class Broadcaster implements Runnable {
-    // This class sends an update to the other players-clients
-
     private String toIp;
     private int toPort;
     private String msg;

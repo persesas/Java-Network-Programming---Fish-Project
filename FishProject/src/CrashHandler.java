@@ -15,6 +15,10 @@ public class CrashHandler {
     private ArrayList<Node> confirmedNodes;
     private DBMediator dbMediator = new DBMediator();
 
+    /**
+     * Constructor of CrashHandler class
+     * @param serverPort - server port
+     */
     public CrashHandler(int serverPort){
         this.serverPort = serverPort;
         start();
@@ -68,9 +72,16 @@ public class CrashHandler {
         t.scheduleAtFixedRate(timerTaskPing, TIME_BEFORE_PING, TIME_BEFORE_PING);
     }
 
+    /**
+     * Announce a received ping
+     * @param node - Node received ping from
+     */
     public void receivedPing(Node node){
         confirmedNodes.add(node);
     }
 
+    /**
+     * Updates the nodes
+     */
     public void updateNodes(){ this.nodes = dbMediator.getAllNodes(); }
 }
